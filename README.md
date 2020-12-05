@@ -1,1 +1,1 @@
-# INT-ASPCP-v1-SP
+# Apache Spark Programming Capstone
