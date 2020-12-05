@@ -1,0 +1,301 @@
+# Databricks notebook source
+# MAGIC %md-sandbox
+# MAGIC 
+# MAGIC <div style="text-align: center; line-height: 0; padding-top: 9px;">
+# MAGIC   <img src="https://databricks.com/wp-content/uploads/2018/03/db-academy-rgb-1200px.png" alt="Databricks Learning" style="width: 600px">
+# MAGIC </div>
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC # Exercise #2 - Batch Ingestion
+# MAGIC 
+# MAGIC In this exercise you will be ingesting three batches of orders, one for 2017, 2018 and 2019.
+# MAGIC 
+# MAGIC As each batch is ingested, we are going to append it to a new Delta table, unifying all the datasets into one single dataset.
+# MAGIC 
+# MAGIC Each year, different individuals and different standards were used resulting in datasets that vary slightly:
+# MAGIC * In 2017 the backup was written as fixed-width text files
+# MAGIC * In 2018 the backup was written a tab-separated text files
+# MAGIC * In 2019 the backup was written as a "standard" comma-separted text files but the format of the column names was changed
+# MAGIC 
+# MAGIC Our only goal here is to unify all the datasets while tracking the source of each record (ingested file name and ingested timestamp) should additional problems arise.
+# MAGIC 
+# MAGIC Because we are only conserned with ingestion at this stage, the majority of the fields will be ingested as simple strings and in future exercises we will address this issue (and others) with various transformations.
+# MAGIC 
+# MAGIC As you progress, several "reality checks" will be provided to you help ensure that you are on track - simply run the corresponding command after implementing the corresponding solution.
+# MAGIC 
+# MAGIC At the end of this exercise, a full assessment will be provided.
+# MAGIC 
+# MAGIC This exercise is broken up into 3 steps:
+# MAGIC * Exercise 2.A - Ingest Fixed-Width File
+# MAGIC * Exercise 2.B - Ingest Tab-Separated File
+# MAGIC * Exercise 2.C - Ingest Comma-Separated File
+
+# COMMAND ----------
+
+# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Setup Exercise #2</h2>
+# MAGIC 
+# MAGIC To get started, we first need to configure your Registration ID and then run the setup notebook.
+
+# COMMAND ----------
+
+# MAGIC %md ### Setup - Registration ID
+# MAGIC 
+# MAGIC In the next commmand, please update the variable **`registration_id`** with the Registration ID you received when you signed up for this project.
+# MAGIC 
+# MAGIC For more information, see [Registration ID]($./Registration ID)
+
+# COMMAND ----------
+
+registration_id = "FILL_IN"
+
+# COMMAND ----------
+
+# MAGIC %md ### Setup - Run the exercise setup
+# MAGIC 
+# MAGIC Run the following cell to setup this exercise, declaring exercise-specific variables and functions.
+
+# COMMAND ----------
+
+# MAGIC %run ./_includes/Setup-Exercise-02
+
+# COMMAND ----------
+
+# MAGIC %md Run the following cell to preview a list of the files you will be processing in this exercise.
+
+# COMMAND ----------
+
+files = dbutils.fs.ls(f"{working_dir}/raw/orders/batch") # List all the files
+display(files)                                           # Display the list of files
+
+# COMMAND ----------
+
+# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #2.A - Ingest Fixed-Width File</h2>
+# MAGIC 
+# MAGIC **In this step you will need to:**
+# MAGIC 1. Use the variable **`batch_2017_path`**, and **`dbutils.fs.head`** to investigate the 2017 batch file, if needed.
+# MAGIC 2. Configure a **`DataFrameReader`** to ingest the text file identified by **`batch_2017_path`** - this should provide one record per line, with a single column named **`value`**
+# MAGIC 3. Using the information in **`fixed_width_column_defs`**, or the dictionary itself, use the **`value`** column to extract each new column of the appropriate length.<br/>
+# MAGIC 4. Once you are done with the **`value`** column, remove it.
+# MAGIC 5. For each new column created in step #3, remove any leading whitespace.
+# MAGIC 6. For each new column created in step #3, replace all empty strings with **`null`**.
+# MAGIC 7. Add a new column, **`ingest_file_name`**, which is the name of the file from which the data was read from - note this should not be hard coded.
+# MAGIC 8. Add a new column, **`ingested_at`**, which is a timestamp of when the data was ingested as a DataFrame - note this should not be hard coded.
+# MAGIC 9. Write the corresponding **`DataFrame`** in the "delta" format to the location specified by **`batch_target_path`**
+# MAGIC 
+# MAGIC **Special Notes:**
+# MAGIC * It is possible to use the dictionary **`fixed_width_column_defs`** and programatically extract <br/>
+# MAGIC   each column but, it is also perfectly OK to hard code this step and extract one column at a time.
+# MAGIC * The **`SparkSession`** is already provided to you as an instance of **`spark`**.
+# MAGIC * The classes/methods that you will need for this exercise include:
+# MAGIC   * **`pyspark.sql.DataFrameReader`** to ingest data
+# MAGIC   * **`pyspark.sql.DataFrameWriter`** to ingest data
+# MAGIC   * **`pyspark.sql.Column`** to transform data
+# MAGIC   * Various functions from the **`pyspark.sql.functions`** module
+# MAGIC   * Various transformations and actions from **`pyspark.sql.DataFrame`**
+# MAGIC * The following methods can be used to investigate and manipulate the Databricks File System (DBFS)
+# MAGIC   * **`dbutils.fs.ls(..)`** for listing files
+# MAGIC   * **`dbutils.fs.rm(..)`** for removing files
+# MAGIC   * **`dbutils.fs.head(..)`** to view the first N bytes of a file
+# MAGIC 
+# MAGIC **Additional Requirements:**
+# MAGIC * The unified batch dataset must be written to disk in the "delta" format
+# MAGIC * The schema for the unified batch dataset must be:
+# MAGIC   * **`submitted_at`**:**`string`**
+# MAGIC   * **`order_id`**:**`string`**
+# MAGIC   * **`customer_id`**:**`string`**
+# MAGIC   * **`sales_rep_id`**:**`string`**
+# MAGIC   * **`sales_rep_ssn`**:**`string`**
+# MAGIC   * **`sales_rep_first_name`**:**`string`**
+# MAGIC   * **`sales_rep_last_name`**:**`string`**
+# MAGIC   * **`sales_rep_address`**:**`string`**
+# MAGIC   * **`sales_rep_city`**:**`string`**
+# MAGIC   * **`sales_rep_state`**:**`string`**
+# MAGIC   * **`sales_rep_zip`**:**`string`**
+# MAGIC   * **`shipping_address_attention`**:**`string`**
+# MAGIC   * **`shipping_address_address`**:**`string`**
+# MAGIC   * **`shipping_address_city`**:**`string`**
+# MAGIC   * **`shipping_address_state`**:**`string`**
+# MAGIC   * **`shipping_address_zip`**:**`string`**
+# MAGIC   * **`product_id`**:**`string`**
+# MAGIC   * **`product_quantity`**:**`string`**
+# MAGIC   * **`product_sold_price`**:**`string`**
+# MAGIC   * **`ingest_file_name`**:**`string`**
+# MAGIC   * **`ingested_at`**:**`timestamp`**
+
+# COMMAND ----------
+
+# MAGIC %md ### Fixed-Width Meta Data 
+# MAGIC 
+# MAGIC The following dictionary is provided for reference and/or implementation<br/>
+# MAGIC (depending on which strategy you choose to employ).
+# MAGIC 
+# MAGIC Run the following cell to instantiate it.
+
+# COMMAND ----------
+
+# MAGIC %md-sandbox
+# MAGIC <div style="color:white; background-color:red; font-weigth:bold; text-align:center">Update to use range</div>
+
+# COMMAND ----------
+
+fixed_width_column_defs = {
+  "submitted_at": 15,
+  "order_id": 40,
+  "customer_id": 40,
+  "sales_rep_id": 40,
+  "sales_rep_ssn": 15,
+
+  "sales_rep_first_name": 15,
+  "sales_rep_last_name": 15,
+  "sales_rep_address": 40,
+  "sales_rep_city": 20,
+  "sales_rep_state": 2,
+  "sales_rep_zip": 5,
+
+  "shipping_address_attention": 30,
+  "shipping_address_address": 40,
+  "shipping_address_city": 20,
+  "shipping_address_state": 2,
+  "shipping_address_zip": 5,
+
+  "product_id": 40,
+  "product_quantity": 5,
+  "product_sold_price": 20
+}
+
+# COMMAND ----------
+
+# MAGIC %md ### Implement Exercise #2.A
+# MAGIC 
+# MAGIC Implement your solution in the following cell:
+
+# COMMAND ----------
+
+# TODO
+# Use this cell to complete your solution
+
+# COMMAND ----------
+
+# DBTITLE 0,Ingest 2017 Fixed-Width
+# ANSWER
+from pyspark.sql.functions import col, length, ltrim, when, lit, input_file_name, current_timestamp
+
+batch_2017_df = spark.read.text(batch_2017_path)
+
+pos = 1
+for column in fixed_width_column_defs:
+  width = fixed_width_column_defs[column]
+  
+  batch_2017_df = batch_2017_df.withColumn(column, ltrim(col("value").substr(pos, width)))
+  batch_2017_df = batch_2017_df.withColumn(column, when(length(col(column)) == 0, lit(None)).otherwise(col(column)))
+  
+  pos = pos + width
+
+batch_2017_df = (batch_2017_df
+  .drop("value")
+  .withColumn("ingest_file_name", input_file_name())
+  .withColumn("ingested_at", current_timestamp())
+)
+
+dbutils.fs.rm(batch_target_path, True)
+batch_2017_df.write.option("overwriteSchema", True).mode("overwrite").format("delta").save(batch_target_path)
+
+display(batch_2017_df)
+
+# COMMAND ----------
+
+# MAGIC %md ### Reality Check #2.A
+# MAGIC Run the following command to ensure that you are on track:<br/>
+# MAGIC (a full assessment will be made at the end of this exercise)
+
+# COMMAND ----------
+
+reality_check_02_A()
+
+# COMMAND ----------
+
+# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #2.B - Ingest Tab-Separted File</h2>
+# MAGIC 
+# MAGIC **In this step you will need to:**
+# MAGIC 1. Use the variable **`batch_2018_path`**, and **`dbutils.fs.head`** to investigate the 2018 batch file, if needed.
+# MAGIC 2. Configure a **`DataFrameReader`** to ingest the tab-separated file identified by **`batch_2018_path`**
+# MAGIC 3. Add a new column, **`ingest_file_name`**, which is the name of the file from which the data was read from - note this should not be hard coded.
+# MAGIC 4. Add a new column, **`ingested_at`**, which is a timestamp of when the data was ingested as a DataFrame - note this should not be hard coded.
+# MAGIC 5. **Append** the corresponding **`DataFrame`** to the previously created datasets specified by **`batch_target_path`**
+# MAGIC 
+# MAGIC **Additional Requirements**
+# MAGIC * Any "null" strings in the CSV file should be replace literal **`null`** values<br/>
+# MAGIC   HINT: This can be done with the **`DataFrameReader`**
+
+# COMMAND ----------
+
+# MAGIC %md ### Implement Exercise #2.b
+# MAGIC 
+# MAGIC Implement your solution in the following cell:
+
+# COMMAND ----------
+
+# TODO
+# Use this cell to complete your solution
+
+# COMMAND ----------
+
+# MAGIC %md ### Reality Check #2.B
+# MAGIC Run the following command to ensure that you are on track:<br/>
+# MAGIC (a full assessment will be made at the end of this exercise)
+
+# COMMAND ----------
+
+reality_check_02_B()
+
+# COMMAND ----------
+
+# MAGIC %md ## Exercise #2.C - Ingest Comma-Separted File
+# MAGIC 
+# MAGIC **In this step you will need to:**
+# MAGIC 1. Use the variable **`batch_2019_path`**, and **`dbutils.fs.head`** to investigate the 2019 batch file, if needed.
+# MAGIC 2. Configure a **`DataFrameReader`** to ingest the comma-separated file identified by **`batch_2019_path`**
+# MAGIC 3. Add a new column, **`ingest_file_name`**, which is the name of the file from which the data was read from - note this should not be hard coded.
+# MAGIC 4. Add a new column, **`ingested_at`**, which is a timestamp of when the data was ingested as a DataFrame - note this should not be hard coded.
+# MAGIC 5. **Append** the corresponding **`DataFrame`** to the previously created dataset specified by **`batch_target_path`**<br/>
+# MAGIC    Note: The column names in this dataset must be updated to conform to the schema defined for Exercise #2.A - there are several strategies for this:
+# MAGIC    * Provide a schema that alters the names upon ingestion
+# MAGIC    * Manually rename one column at a time
+# MAGIC    * Use **`fixed_width_column_defs`** programaticly rename one column at a time
+# MAGIC    * Use transformations found in the **`DataFrame`** class to rename all columns in one operation
+# MAGIC 
+# MAGIC **Additional Requirements**
+# MAGIC * Any "null" strings in the CSV file should be replace literal **`null`** values
+
+# COMMAND ----------
+
+# MAGIC %md ### Implement Exercise #2.C
+# MAGIC 
+# MAGIC Implement your solution in the following cell:
+
+# COMMAND ----------
+
+# TODO
+# Use this cell to complete your solution
+
+# COMMAND ----------
+
+# MAGIC %md ### Reality Check #2.C
+# MAGIC Run the following command to ensure that you are on track:<br/>
+# MAGIC (a full assessment will be made at the end of this exercise)
+
+# COMMAND ----------
+
+reality_check_02_C()
+
+# COMMAND ----------
+
+# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #2 - Final Assessments</h2>
+# MAGIC 
+# MAGIC Run the following command to make sure this exercise is complete:
+
+# COMMAND ----------
+
+full_assessment_02()
