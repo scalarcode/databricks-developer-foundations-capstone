@@ -59,3 +59,7 @@ https://github.com/databricks-academy/INT-ASPCP-v1/releases
 9. Select **browse** and select the DBC file that you saved to your machine in step #3 above.
 10. Select **Import** - after a few seconds, the project should be fully imported
 9. Open the notebook, **Exercise 00 - Overview**.
+
+### Completing the Capstone Project
+1. Start with notebook **Exercise 00 - Overview** which provides an overview and context for the project.
+2. From there, work your way through each notebook (1-6)
