@@ -62,7 +62,7 @@ class DatabricksAcademyLogger:
     try:
       content = {
         "tags":       dict(map(lambda x: (x[0], str(x[1])), getTags().items())),
-        "moduleName": module_name,
+        "moduleName": sku,
         "lessonName": getLessonName(),
         "orgId":      getTag("orgId", "unknown"),
         "username":   getTag("user", "unknown"),
@@ -263,9 +263,8 @@ class TestSuite(object):
   def passed(self) -> bool:
     return self.percentage == 100
 
-  @lazy_property
   def lastTestId(self) -> bool:
-    return self.testCases[-1].id
+    return "-n/a-" if len(self.testCases) == 0 else self.testCases[-1].id
 
   def addTest(self, testCase: TestCase):
     if not testCase.id: raise ValueError("The test cases' id must be specified")
@@ -351,11 +350,11 @@ username = getTag("user")
 
 # The course SKU is simply the
 # unique identifier for this project
-module_name = "INT-ASPCP-v1-SP"
+sku = "INT-ASPCP-v1"
 
 # The path to our user's working directory. This combines both the
-# username and module_name to create a "globally unique" folder
-working_dir = f"dbfs:/user/{username}/dbacademy/{module_name}"
+# username and sku to create a "globally unique" folder
+working_dir = f"dbfs:/user/{username}/dbacademy/{sku}"
 meta_dir = f"{working_dir}/raw/orders/batch/2017.txt"
 
 batch_2017_path = f"{working_dir}/raw/orders/batch/2017.txt"

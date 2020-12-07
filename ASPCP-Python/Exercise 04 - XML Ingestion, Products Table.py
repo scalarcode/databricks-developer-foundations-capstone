@@ -94,7 +94,9 @@ reality_check_04_A()
 # MAGIC   * Group ID: **com.databricks**
 # MAGIC   * Artifact ID: **spark-xml_2.12**
 # MAGIC   * Version: **0.10.0**
-# MAGIC   
+# MAGIC 
+# MAGIC If you are unfamiliar with this processes, more information can be found in the <a href="https://docs.databricks.com/libraries/cluster-libraries.html" target="_blank">Cluster libraries documentation</a>.
+# MAGIC 
 # MAGIC Once the library is installed, run the following reality check to confirm proper installation.<br/>
 # MAGIC Note: You may need to restart the cluster after installing the library for you changes to take effect.
 

@@ -57,6 +57,7 @@ expectedProductLineItemSchema = createExpectedProductLineItemSchema()
 check_a_passed = False
 check_b_passed = False
 check_c_passed = False
+check_final_passed = False
 
 # COMMAND ----------
 
@@ -100,30 +101,30 @@ def reality_check_04_C():
   suite.test(f"{suite_name}.table-exists", f"The table {products_table} exists",  
              testFunction = lambda: len(list(filter(lambda t: t.name==products_table, spark.catalog.listTables(user_db)))) == 1)
   
-  suite.test(f"{suite_name}.is-managed", f"The table {products_table} is a managed table", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.is-managed", f"The table {products_table} is a managed table", dependsOn=[suite.lastTestId()],
              testFunction = lambda: list(filter(lambda t: t.name==products_table, spark.catalog.listTables(user_db)))[0].tableType == "MANAGED")
   
   hive_path = f"dbfs:/user/hive/warehouse/{user_db}.db/{products_table}"
-  suite.test(f"{suite_name}.is_delta", "Using the Delta file format", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.is_delta", "Using the Delta file format", dependsOn=[suite.lastTestId()],
            testFunction = lambda: len(list(filter(lambda f: f.path.endswith("/_delta_log/"), dbutils.fs.ls( hive_path)))) == 1)
 
-  suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId()],
              testFunction = lambda: checkSchema(spark.read.table(products_table).schema, expectedProductSchema, False, False))
 
   actual = spark.read.table(products_table).count()
   suite.testEquals(f"{suite_name}.count", f"Expected {meta_products_count} records, found {actual}", 
-                   actual, meta_products_count, dependsOn=[suite.lastTestId])
+                   actual, meta_products_count, dependsOn=[suite.lastTestId()])
 
-  suite.test(f"{suite_name}.min-color_adj", f"Sample A of color_adj (valid values)", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.min-color_adj", f"Sample A of color_adj (valid values)", dependsOn=[suite.lastTestId()],
              testFunction = lambda: spark.read.table(products_table).select(min(col("color_adj"))).first()[0] == 1.0)
 
-  suite.test(f"{suite_name}.max-color_adj", f"Sample B of color_adj (valid values)", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.max-color_adj", f"Sample B of color_adj (valid values)", dependsOn=[suite.lastTestId()],
              testFunction = lambda: spark.read.table(products_table).select(max(col("color_adj"))).first()[0] == 1.1)
 
-  suite.test(f"{suite_name}.min-size_adj", f"Sample A of size_adj (valid values)", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.min-size_adj", f"Sample A of size_adj (valid values)", dependsOn=[suite.lastTestId()],
              testFunction = lambda: spark.read.table(products_table).select(min(col("size_adj"))).first()[0] == 0.9)
 
-  suite.test(f"{suite_name}.max-size_adj", f"Sample B of size_adj (valid values)", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.max-size_adj", f"Sample B of size_adj (valid values)", dependsOn=[suite.lastTestId()],
              testFunction = lambda: spark.read.table(products_table).select(max(col("size_adj"))).first()[0] == 1.0)
 
   daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
@@ -134,16 +135,18 @@ def reality_check_04_C():
 # COMMAND ----------
 
 def full_assessment_04():
-  from pyspark.sql.functions import year, month, dayofmonth, from_unixtime
-  from datetime import datetime
+  global check_final_passed
+  from pyspark.sql.functions import col
 
   suite_name = "ex.04.all"
   suite = TestSuite()
   
   suite.testEquals(f"{suite_name}.a-passed", "Reality Check 04.A passed", check_a_passed, True)
-  suite.testEquals(f"{suite_name}.b-passed", "Reality Check 04.B passed", check_b_passed, True, dependsOn=[suite.lastTestId])
-  suite.testEquals(f"{suite_name}.c-passed", "Reality Check 04.C passed", check_c_passed, True, dependsOn=[suite.lastTestId])
-    
+  suite.testEquals(f"{suite_name}.b-passed", "Reality Check 04.B passed", check_b_passed, True, dependsOn=[suite.lastTestId()])
+  suite.testEquals(f"{suite_name}.c-passed", "Reality Check 04.C passed", check_c_passed, True, dependsOn=[suite.lastTestId()])
+
+  check_final_passed = suite.passed
+
   daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
   
   daLogger.logEvent(f"ex.02.final", f"{{\"registration_id\": {registration_id}, \"passed\": {TestResultsAggregator.passed}, \"percentage\": {TestResultsAggregator.percentage}, \"actPoints\": {TestResultsAggregator.score}, \"maxPoints\":   {TestResultsAggregator.maxScore}}}")

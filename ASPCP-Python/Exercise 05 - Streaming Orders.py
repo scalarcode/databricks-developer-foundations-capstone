@@ -135,8 +135,8 @@ reality_check_05_A()
 # MAGIC   * Add the column **`submitted_yyyy_mm`** usinge the format "**yyyy-MM**"
 # MAGIC   * Make any other changes required to the column names and data types so that they conform to the **`orders`** table's schema
 # MAGIC 
-# MAGIC * Write the stream to a Delta sink:
-# MAGIC   * The sink's format should be "**delta**"
+# MAGIC * Write the stream to a Delta **table**.:
+# MAGIC   * The table's format should be "**delta**"
 # MAGIC   * Partition the data by the column **`submitted_yyyy_mm`**
 # MAGIC   * Records must be appended to the table identified by the variable **`orders_table`**
 # MAGIC   * The query must be named the same as the table, identified by the variable **`orders_table`**

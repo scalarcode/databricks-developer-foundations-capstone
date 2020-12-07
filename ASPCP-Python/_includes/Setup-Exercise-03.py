@@ -76,6 +76,7 @@ check_b_passed = False
 check_c_passed = False
 check_d_passed = False
 check_e_passed = False
+check_final_passed = False
 
 # COMMAND ----------
 
@@ -104,15 +105,15 @@ def reality_check_03_B():
   suite.test(f"{suite_name}.table-exists", f"The table {batch_temp_view} exists",  
              testFunction = lambda: len(list(filter(lambda t: t.name==batch_temp_view, spark.catalog.listTables(user_db)))) == 1)
   
-  suite.test(f"{suite_name}.is-temp-view", f"The table {batch_temp_view} is a temp view", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.is-temp-view", f"The table {batch_temp_view} is a temp view", dependsOn=[suite.lastTestId()],
              testFunction = lambda: list(filter(lambda t: t.name==batch_temp_view, spark.catalog.listTables(user_db)))[0].tableType == "TEMPORARY")
   
-  suite.test(f"{suite_name}.is-cached", f"The table {batch_temp_view} is cached", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.is-cached", f"The table {batch_temp_view} is cached", dependsOn=[suite.lastTestId()],
              testFunction = lambda: spark.catalog.isCached(batch_temp_view))
 
   expected = meta_batch_count_2017+meta_batch_count_2018+meta_batch_count_2019
   actual = spark.read.table(batch_temp_view).count()
-  suite.test(f"{suite_name}.count", f"Expected {expected:,d} records, found {actual:,d}", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.count", f"Expected {expected:,d} records, found {actual:,d}", dependsOn=[suite.lastTestId()],
              testFunction = lambda:  actual == expected)
   
   daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
@@ -131,23 +132,23 @@ def reality_check_03_C():
   suite.test(f"{suite_name}.table-exists", f"The table {sales_reps_table} exists",  
              testFunction = lambda: len(list(filter(lambda t: t.name==sales_reps_table, spark.catalog.listTables(user_db)))) == 1)
   
-  suite.test(f"{suite_name}.is-managed", f"The table {sales_reps_table} is a managed table", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.is-managed", f"The table {sales_reps_table} is a managed table", dependsOn=[suite.lastTestId()],
              testFunction = lambda: list(filter(lambda t: t.name==sales_reps_table, spark.catalog.listTables(user_db)))[0].tableType == "MANAGED")
 
   hive_path = f"dbfs:/user/hive/warehouse/{user_db}.db/{sales_reps_table}"
-  suite.test(f"{suite_name}.is_delta", "Using the Delta file format", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.is_delta", "Using the Delta file format", dependsOn=[suite.lastTestId()],
            testFunction = lambda: len(list(filter(lambda f: f.path.endswith("/_delta_log/"), dbutils.fs.ls( hive_path)))) == 1)
 
-  suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId()],
              testFunction = lambda: checkSchema(spark.read.table(sales_reps_table).schema, expectedSalesRepSchema, False, False))
 
   actual = spark.read.table(sales_reps_table).count()
   suite.testEquals(f"{suite_name}.count-total", f"Expected {meta_sales_reps_count:,d} records, found {actual:,d}", 
-             actual, meta_sales_reps_count, dependsOn=[suite.lastTestId])
+             actual, meta_sales_reps_count, dependsOn=[suite.lastTestId()])
 
   actual = spark.read.table(sales_reps_table).filter("_error_ssn_format == true").count()
   suite.testEquals(f"{suite_name}.count-ssn-format", f"Expected _error_ssn_format record count to be {meta_ssn_format_count:,d}, found {actual:,d}", 
-             actual, meta_ssn_format_count, dependsOn=[suite.lastTestId])
+             actual, meta_ssn_format_count, dependsOn=[suite.lastTestId()])
 
   daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
   
@@ -165,21 +166,21 @@ def reality_check_03_D():
   suite.test(f"{suite_name}.table-exists", f"The table {orders_table} exists",  
              testFunction = lambda: len(list(filter(lambda t: t.name==orders_table, spark.catalog.listTables(user_db)))) == 1)
   
-  suite.test(f"{suite_name}.is-managed", f"The table {orders_table} is a managed table", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.is-managed", f"The table {orders_table} is a managed table", dependsOn=[suite.lastTestId()],
              testFunction = lambda: list(filter(lambda t: t.name==orders_table, spark.catalog.listTables(user_db)))[0].tableType == "MANAGED")
 
   hive_path = f"dbfs:/user/hive/warehouse/{user_db}.db/{orders_table}"
-  suite.test(f"{suite_name}.is_delta", "Using the Delta file format", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.is_delta", "Using the Delta file format", dependsOn=[suite.lastTestId()],
            testFunction = lambda: len(list(filter(lambda f: f.path.endswith("/_delta_log/"), dbutils.fs.ls( hive_path)))) == 1)
   
-  suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId()],
              testFunction = lambda: checkSchema(spark.read.table(orders_table).schema, expectedOrdersSchema, False, False))
 
   actual = spark.read.table(orders_table).count()
-  suite.test(f"{suite_name}.count-total", f"Expected {meta_orders_count:,d} records, found {actual:,d}", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.count-total", f"Expected {meta_orders_count:,d} records, found {actual:,d}", dependsOn=[suite.lastTestId()],
              testFunction = lambda: actual == meta_orders_count)
 
-  suite.test(f"{suite_name}.non-null-submitted_at", f"Non-null (properly parsed) submitted_at", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.non-null-submitted_at", f"Non-null (properly parsed) submitted_at", dependsOn=[suite.lastTestId()],
              testFunction = lambda: spark.read.table(orders_table).filter(col("submitted_at").isNull()).count() == 0)
 
   def is_partitioned():
@@ -191,7 +192,7 @@ def reality_check_03_D():
         if path in files == False:
           return False
     return True
-  suite.test(f"{suite_name}.is_partitioned", f"Partitioned by submitted_yyyy_mm", dependsOn=[suite.lastTestId], testFunction = is_partitioned)
+  suite.test(f"{suite_name}.is_partitioned", f"Partitioned by submitted_yyyy_mm", dependsOn=[suite.lastTestId()], testFunction = is_partitioned)
   
   daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
   
@@ -209,18 +210,18 @@ def reality_check_03_E():
   suite.test(f"{suite_name}.table-exists", f"The table {line_items_table} exists",  
              testFunction = lambda: len(list(filter(lambda t: t.name==line_items_table, spark.catalog.listTables(user_db)))) == 1)
   
-  suite.test(f"{suite_name}.is-managed", f"The table {line_items_table} is a managed table", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.is-managed", f"The table {line_items_table} is a managed table", dependsOn=[suite.lastTestId()],
              testFunction = lambda: list(filter(lambda t: t.name==line_items_table, spark.catalog.listTables(user_db)))[0].tableType == "MANAGED")
 
   hive_path = f"dbfs:/user/hive/warehouse/{user_db}.db/{line_items_table}"
-  suite.test(f"{suite_name}.is_delta", "Using the Delta file format", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.is_delta", "Using the Delta file format", dependsOn=[suite.lastTestId()],
            testFunction = lambda: len(list(filter(lambda f: f.path.endswith("/_delta_log/"), dbutils.fs.ls( hive_path)))) == 1)
   
-  suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId()],
              testFunction = lambda: checkSchema(spark.read.table(line_items_table).schema, expectedLineItemsSchema, False, False))
 
   actual = spark.read.table(line_items_table).count()
-  suite.test(f"{suite_name}.count-total", f"Expected {meta_line_items_count:,d} records, found {actual:,d}", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.count-total", f"Expected {meta_line_items_count:,d} records, found {actual:,d}", dependsOn=[suite.lastTestId()],
              testFunction = lambda: actual == meta_line_items_count)
 
   daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
@@ -231,18 +232,20 @@ def reality_check_03_E():
 # COMMAND ----------
 
 def full_assessment_03():
-  from pyspark.sql.functions import year, month, dayofmonth, from_unixtime
-  from datetime import datetime
+  global check_final_passed
+  from pyspark.sql.functions import col
 
   suite_name = "ex.03.all"
   suite = TestSuite()
   
   suite.testEquals(f"{suite_name}.a-passed", "Reality Check 03.A passed", check_a_passed, True)
-  suite.testEquals(f"{suite_name}.b-passed", "Reality Check 03.B passed", check_b_passed, True, dependsOn=[suite.lastTestId])
-  suite.testEquals(f"{suite_name}.c-passed", "Reality Check 03.C passed", check_c_passed, True, dependsOn=[suite.lastTestId])
-  suite.testEquals(f"{suite_name}.d-passed", "Reality Check 03.D passed", check_d_passed, True, dependsOn=[suite.lastTestId])
-  suite.testEquals(f"{suite_name}.e-passed", "Reality Check 03.E passed", check_e_passed, True, dependsOn=[suite.lastTestId])
+  suite.testEquals(f"{suite_name}.b-passed", "Reality Check 03.B passed", check_b_passed, True, dependsOn=[suite.lastTestId()])
+  suite.testEquals(f"{suite_name}.c-passed", "Reality Check 03.C passed", check_c_passed, True, dependsOn=[suite.lastTestId()])
+  suite.testEquals(f"{suite_name}.d-passed", "Reality Check 03.D passed", check_d_passed, True, dependsOn=[suite.lastTestId()])
+  suite.testEquals(f"{suite_name}.e-passed", "Reality Check 03.E passed", check_e_passed, True, dependsOn=[suite.lastTestId()])
     
+  check_final_passed = suite.passed
+  
   daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
   
   daLogger.logEvent(f"ex.02.final", f"{{\"registration_id\": {registration_id}, \"passed\": {TestResultsAggregator.passed}, \"percentage\": {TestResultsAggregator.percentage}, \"actPoints\": {TestResultsAggregator.score}, \"maxPoints\":   {TestResultsAggregator.maxScore}}}")

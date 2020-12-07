@@ -76,12 +76,21 @@ display(files)                                           # Display the list of f
 # MAGIC **In this step you will need to:**
 # MAGIC 1. Use the variable **`batch_2017_path`**, and **`dbutils.fs.head`** to investigate the 2017 batch file, if needed.
 # MAGIC 2. Configure a **`DataFrameReader`** to ingest the text file identified by **`batch_2017_path`** - this should provide one record per line, with a single column named **`value`**
-# MAGIC 3. Using the information in **`fixed_width_column_defs`**, or the dictionary itself, use the **`value`** column to extract each new column of the appropriate length.<br/>
+# MAGIC 3. Using the information in **`fixed_width_column_defs`** (or the dictionary itself) use the **`value`** column to extract each new column of the appropriate length.<br/>
+# MAGIC   * The dictionary's key is the column name
+# MAGIC   * The first element in the dictionary's value is the starting position of that column's data
+# MAGIC   * The second element in the dictionary's value is the length of that column's data
 # MAGIC 4. Once you are done with the **`value`** column, remove it.
-# MAGIC 5. For each new column created in step #3, remove any leading whitespace.
+# MAGIC 5. For each new column created in step #3, remove any leading whitespace
+# MAGIC   * The introduction of \[leading\] white space should be expected when extracting fixed-width values out of the **`value`** column.
 # MAGIC 6. For each new column created in step #3, replace all empty strings with **`null`**.
-# MAGIC 7. Add a new column, **`ingest_file_name`**, which is the name of the file from which the data was read from - note this should not be hard coded.
-# MAGIC 8. Add a new column, **`ingested_at`**, which is a timestamp of when the data was ingested as a DataFrame - note this should not be hard coded.
+# MAGIC   * After trimming white space, any column for which a value was not specified in the original dataset should result in an empty string.
+# MAGIC 7. Add a new column, **`ingest_file_name`**, which is the name of the file from which the data was read from.
+# MAGIC   * This should not be hard coded.
+# MAGIC   * For the proper function, see the <a href="https://spark.apache.org/docs/latest/api/python/index.html" target="_blank">pyspark.sql.functions</a> module
+# MAGIC 8. Add a new column, **`ingested_at`**, which is a timestamp of when the data was ingested as a DataFrame.
+# MAGIC   * This should not be hard coded.
+# MAGIC   * For the proper function, see the <a href="https://spark.apache.org/docs/latest/api/python/index.html" target="_blank">pyspark.sql.functions</a> module
 # MAGIC 9. Write the corresponding **`DataFrame`** in the "delta" format to the location specified by **`batch_target_path`**
 # MAGIC 
 # MAGIC **Special Notes:**
@@ -135,34 +144,26 @@ display(files)                                           # Display the list of f
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
-# MAGIC <div style="color:white; background-color:red; font-weigth:bold; text-align:center">Update to use range</div>
-
-# COMMAND ----------
-
 fixed_width_column_defs = {
-  "submitted_at": 15,
-  "order_id": 40,
-  "customer_id": 40,
-  "sales_rep_id": 40,
-  "sales_rep_ssn": 15,
-
-  "sales_rep_first_name": 15,
-  "sales_rep_last_name": 15,
-  "sales_rep_address": 40,
-  "sales_rep_city": 20,
-  "sales_rep_state": 2,
-  "sales_rep_zip": 5,
-
-  "shipping_address_attention": 30,
-  "shipping_address_address": 40,
-  "shipping_address_city": 20,
-  "shipping_address_state": 2,
-  "shipping_address_zip": 5,
-
-  "product_id": 40,
-  "product_quantity": 5,
-  "product_sold_price": 20
+  "submitted_at": (1, 15),
+  "order_id": (16, 40),
+  "customer_id": (56, 40),
+  "sales_rep_id": (96, 40),
+  "sales_rep_ssn": (136, 15),
+  "sales_rep_first_name": (151, 15),
+  "sales_rep_last_name": (166, 15),
+  "sales_rep_address": (181, 40),
+  "sales_rep_city": (221, 20),
+  "sales_rep_state": (241, 2),
+  "sales_rep_zip": (243, 5),
+  "shipping_address_attention": (248, 30),
+  "shipping_address_address": (278, 40),
+  "shipping_address_city": (318, 20),
+  "shipping_address_state": (338, 2),
+  "shipping_address_zip": (340, 5),
+  "product_id": (345, 40),
+  "product_quantity": (385, 5),
+  "product_sold_price": (390, 20)
 }
 
 # COMMAND ----------
@@ -184,14 +185,11 @@ from pyspark.sql.functions import col, length, ltrim, when, lit, input_file_name
 
 batch_2017_df = spark.read.text(batch_2017_path)
 
-pos = 1
 for column in fixed_width_column_defs:
-  width = fixed_width_column_defs[column]
+  pos, width = fixed_width_column_defs[column]
   
   batch_2017_df = batch_2017_df.withColumn(column, ltrim(col("value").substr(pos, width)))
   batch_2017_df = batch_2017_df.withColumn(column, when(length(col(column)) == 0, lit(None)).otherwise(col(column)))
-  
-  pos = pos + width
 
 batch_2017_df = (batch_2017_df
   .drop("value")

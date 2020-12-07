@@ -56,10 +56,11 @@ def first_n_equal_one(name):
       return False
   return True
 
-check_a_passed = True
-check_b_passed = True
-check_c_passed = True
-check_d_passed = True
+check_a_passed = False
+check_b_passed = False
+check_c_passed = False
+check_d_passed = False
+check_final_passed = False
 
 # COMMAND ----------
 
@@ -73,16 +74,16 @@ def reality_check_05_A():
              testFunction = lambda: spark.catalog.currentDatabase() == user_db)
 
   actual_order_count = spark.read.table(orders_table).count()
-  suite.test(f"{suite_name}.o-total", f"Expected {meta_orders_count:,d} orders, found {actual_order_count:,d}", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.o-total", f"Expected {meta_orders_count:,d} orders, found {actual_order_count:,d}", dependsOn=[suite.lastTestId()],
              testFunction = lambda: actual_order_count == meta_orders_count)
 
   actual_li_count = spark.read.table(line_items_table).count()
-  suite.test(f"{suite_name}.li-total", f"Expected {meta_line_items_count:,d} line-items, found {actual_li_count:,d}", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.li-total", f"Expected {meta_line_items_count:,d} line-items, found {actual_li_count:,d}", dependsOn=[suite.lastTestId()],
              testFunction = lambda: actual_li_count == meta_line_items_count)
   
   actual_products_count = spark.read.table(products_table).count()
   suite.testEquals(f"{suite_name}.p-count", f"Expected {meta_products_count} products, found {actual_products_count}", 
-                   actual_products_count, meta_products_count, dependsOn=[suite.lastTestId])
+                   actual_products_count, meta_products_count, dependsOn=[suite.lastTestId()])
 
   daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
   
@@ -103,18 +104,18 @@ def reality_check_05_B():
 
   actual = len(query.recentProgress)
   suite.testEquals(f"{suite_name}.min-count", f"Expected at least {meta_stream_count} triggers, found {actual}", actual >= meta_stream_count, True)
-  suite.testEquals(f"{suite_name}.max-count", f"Expected less than 100 triggers, found {actual}", actual < 100, True, dependsOn=[suite.lastTestId])
+  suite.testEquals(f"{suite_name}.max-count", f"Expected less than 100 triggers, found {actual}", actual < 100, True, dependsOn=[suite.lastTestId()])
 
-  suite.test(f"{suite_name}.whatever", f"Expected the first {meta_stream_count} triggers to processes 1 record per trigger", dependsOn=[suite.lastTestId], 
+  suite.test(f"{suite_name}.whatever", f"Expected the first {meta_stream_count} triggers to processes 1 record per trigger", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: first_n_equal_one(orders_table))
   
-  suite.test(f"{suite_name}.exists", "Checkpoint directory exists", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.exists", "Checkpoint directory exists", dependsOn=[suite.lastTestId()],
            testFunction = lambda: len(dbutils.fs.ls(f"{orders_checkpoint_path}/metadata")) > 0)
 
   actual = spark.read.table(orders_table).count()
   expected = meta_orders_count + meta_stream_count
   suite.testEquals(f"{suite_name}.order_total", f"Expected {expected:,d} orders, found {actual:,d} ({meta_stream_count} new)", 
-                   actual, expected, dependsOn=[suite.lastTestId])
+                   actual, expected, dependsOn=[suite.lastTestId()])
   
   daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
   
@@ -137,17 +138,17 @@ def reality_check_05_C():
 
   actual_trigger_count = len(query.recentProgress)
   suite.testEquals(f"{suite_name}.min-count", f"Expected at least {meta_stream_count:,d} triggers, found {actual_trigger_count:,d}", actual_trigger_count >= meta_stream_count, True)
-  suite.testEquals(f"{suite_name}.max-count", f"Expected less than 100 triggers, found {actual_trigger_count:,d}", actual_trigger_count < 100, True, dependsOn=[suite.lastTestId])
+  suite.testEquals(f"{suite_name}.max-count", f"Expected less than 100 triggers, found {actual_trigger_count:,d}", actual_trigger_count < 100, True, dependsOn=[suite.lastTestId()])
 
-  suite.test(f"{suite_name}.whatever", f"Expected the first {meta_stream_count:,d} triggers to processes 1 record per trigger", dependsOn=[suite.lastTestId], testFunction = lambda: first_n_equal_one(line_items_table))
+  suite.test(f"{suite_name}.whatever", f"Expected the first {meta_stream_count:,d} triggers to processes 1 record per trigger", dependsOn=[suite.lastTestId()], testFunction = lambda: first_n_equal_one(line_items_table))
 
-  suite.test(f"{suite_name}.exists", "Checkpoint directory exists", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.exists", "Checkpoint directory exists", dependsOn=[suite.lastTestId()],
            testFunction = lambda: len(dbutils.fs.ls(f"{line_items_checkpoint_path}/metadata")) > 0)
 
   actual_li_count = spark.read.table(line_items_table).count()
   new_count = spark.read.json(stream_path).select("orderId", explode("products")).count()
   expected_li_count = meta_line_items_count + new_count
-  suite.testEquals(f"{suite_name}.li_total", f"Expected {expected_li_count:,d} records, found {actual_li_count:,d} ({new_count} new)", actual_li_count, expected_li_count, dependsOn=[suite.lastTestId])
+  suite.testEquals(f"{suite_name}.li_total", f"Expected {expected_li_count:,d} records, found {actual_li_count:,d} ({new_count} new)", actual_li_count, expected_li_count, dependsOn=[suite.lastTestId()])
   
   daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
   
@@ -160,31 +161,35 @@ def reality_check_05_C():
 # COMMAND ----------
 
 def full_assessment_05():
-
+  global check_final_passed
+  from pyspark.sql.functions import col
+  
   suite_name = "ex.05.all"
   suite = TestSuite()
   
   suite.testEquals(f"{suite_name}.a-passed", "Reality Check 05.A passed", check_a_passed, True)
-  suite.testEquals(f"{suite_name}.b-passed", "Reality Check 05.B passed", check_b_passed, True, dependsOn=[suite.lastTestId])
-  suite.testEquals(f"{suite_name}.c-passed", "Reality Check 05.C passed", check_c_passed, True, dependsOn=[suite.lastTestId])
+  suite.testEquals(f"{suite_name}.b-passed", "Reality Check 05.B passed", check_b_passed, True, dependsOn=[suite.lastTestId()])
+  suite.testEquals(f"{suite_name}.c-passed", "Reality Check 05.C passed", check_c_passed, True, dependsOn=[suite.lastTestId()])
 
   actual_order_count = spark.read.table(orders_table).count()
   expected_order_count = meta_orders_count + meta_stream_count
   suite.testEquals(f"{suite_name}.order_total", f"Expected {expected_order_count:,d} orders, found {actual_order_count:,d} ({meta_stream_count} new)", 
-                   actual_order_count, expected_order_count, dependsOn=[suite.lastTestId])
+                   actual_order_count, expected_order_count, dependsOn=[suite.lastTestId()])
 
   actual_li_count = spark.read.table(line_items_table).count()
   new_count = spark.read.json(stream_path).select("orderId", explode("products")).count()
   expected_li_count = meta_line_items_count + new_count
-  suite.testEquals(f"{suite_name}.li_total", f"Expected {expected_li_count:,d} records, found {actual_li_count:,d} ({new_count} new)", actual_li_count, expected_li_count, dependsOn=[suite.lastTestId])
+  suite.testEquals(f"{suite_name}.li_total", f"Expected {expected_li_count:,d} records, found {actual_li_count:,d} ({new_count} new)", actual_li_count, expected_li_count, dependsOn=[suite.lastTestId()])
   
   actual_products_count = spark.read.table(products_table).count()
   suite.testEquals(f"{suite_name}.p-count", f"Expected {meta_products_count} products, found {actual_products_count}", 
-                   actual_products_count, meta_products_count, dependsOn=[suite.lastTestId])
+                   actual_products_count, meta_products_count, dependsOn=[suite.lastTestId()])
 
-  suite.test(f"{suite_name}.non-null-submitted_at", f"Non-null (properly parsed) submitted_at", dependsOn=[suite.lastTestId],
+  suite.test(f"{suite_name}.non-null-submitted_at", f"Non-null (properly parsed) submitted_at", dependsOn=[suite.lastTestId()],
              testFunction = lambda: spark.read.table(orders_table).filter(col("submitted_at").isNull()).count() == 0)
   
+  check_final_passed = suite.passed
+
   daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
   
   daLogger.logEvent(f"ex.02.final", f"{{\"registration_id\": {registration_id}, \"passed\": {TestResultsAggregator.passed}, \"percentage\": {TestResultsAggregator.percentage}, \"actPoints\": {TestResultsAggregator.score}, \"maxPoints\":   {TestResultsAggregator.maxScore}}}")
