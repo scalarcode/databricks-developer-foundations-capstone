@@ -57,7 +57,7 @@ def reality_check_06_a():
 
   new_count = spark.read.json(stream_path).select("orderId", explode("products")).count()
   expected_li_count = meta_line_items_count + new_count
-  suite.test(f"{suite_name}.li_total", f"Expected {expected_li_count:,d} records, ({new_count} new)", dependsOn=[suite.lastTestId()],
+  suite.test(f"{suite_name}.li_total", f"Expected {expected_li_count:,d} records ({new_count} new)", dependsOn=[suite.lastTestId()],
              testFunction = lambda: spark.read.table(line_items_table).count() == expected_li_count)
   
   suite.test(f"{suite_name}.p-count", f"Expected {meta_products_count} products", dependsOn=[suite.lastTestId()], 

@@ -142,6 +142,10 @@ reality_check_06_b()
 # TODO
 # Use this cell to complete your solution
 
+ex_avg = 0 # FILL_IN
+ex_min = 0 # FILL_IN
+ex_max = 0 # FILL_IN
+
 # COMMAND ----------
 
 # MAGIC %md ### Reality Check #6.C
