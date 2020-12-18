@@ -35,25 +35,36 @@ displayHTML(html)
 
 def wait_for_stream_start(name, max_count):
   import time
+
+  timeout = 60
   while len(list(filter(lambda query: query.name == name, spark.streams.active))) == 0:
     print(f"""Waiting for the stream "{name}" to start...""")
     time.sleep(5) # Give it a couple of seconds
+    timeout -= 5  # Decrement our timer
+    if (timeout <= 0): raise Exception("Timed out waiting for the query to start")
 
   query = list(filter(lambda query: query.name == name, spark.streams.active))[0]
   print(f"""The stream "{name}" has started.""")
       
+  timeout = 60
   while len(query.recentProgress) == 0:
     print(f"""The stream hasn't processed any trigger yet...""")
     time.sleep(5) # Give it a couple of seconds
+    timeout -= 5  # Decrement our timer
+    if (timeout <= 0): raise Exception("Timed out waiting for the first trigger")
     
   if len(query.recentProgress) == 1: print(f"""The stream has processed {len(query.recentProgress)} triggers so far.""")
   else: print(f"""The stream has processed {len(query.recentProgress)} triggers so far.""")
 
+  timeout = 60*5
   while len(query.recentProgress) < max_count:
     print(f"Processing trigger {len(query.recentProgress)+1} of {max_count}...")
     if query.recentProgress[-1]["numInputRows"] > 1:
       raise Exception(f"Expected 1 record per trigger, found {query.recentProgress[-1]['numInputRows']}, aborting all tests.")
+
     time.sleep(5) # Give it a couple of seconds
+    timeout -= 5  # Decrement our timer
+    if (timeout <= 0): raise Exception("Timed out waiting for all events to be processed")
   
   return query
 
@@ -102,32 +113,37 @@ def reality_check_05_b():
   
   suite_name = "ex.05.b"
   suite = TestSuite()
-  
-  oneRecordEach = True
-  query = wait_for_stream_start(orders_table, meta_stream_count)
-  print("Processing results...")
 
-  suite.test(f"{suite_name}.min-count", f"Expected at least {meta_stream_count} triggers",
-             testFunction = lambda: len(query.recentProgress) >= meta_stream_count)
-  
-  suite.test(f"{suite_name}.max-count", f"Expected less than 100 triggers", dependsOn=[suite.lastTestId()], 
-             testFunction = lambda: len(query.recentProgress) < 100)
+  try:
+    query = wait_for_stream_start(orders_table, meta_stream_count)
+    print("Processing results...")
 
-  suite.test(f"{suite_name}.whatever", f"Expected the first {meta_stream_count} triggers to processes 1 record per trigger", 
-             dependsOn=[suite.lastTestId()], 
-             testFunction = lambda: first_n_equal_one(orders_table))
-  
-  suite.test(f"{suite_name}.exists", "Checkpoint directory exists", dependsOn=[suite.lastTestId()],
-           testFunction = lambda: len(dbutils.fs.ls(f"{orders_checkpoint_path}/metadata")) > 0)
+    suite.test(f"{suite_name}.min-count", f"Expected at least {meta_stream_count} triggers",
+               testFunction = lambda: len(query.recentProgress) >= meta_stream_count)
 
-  suite.test(f"{suite_name}.order_total", f"Expected {meta_orders_count + meta_stream_count:,d} orders ({meta_stream_count} new)", 
-             dependsOn=[suite.lastTestId()], 
-             testFunction = lambda: spark.read.table(orders_table).count() == meta_orders_count + meta_stream_count)
+    suite.test(f"{suite_name}.max-count", f"Expected less than 100 triggers", dependsOn=[suite.lastTestId()], 
+               testFunction = lambda: len(query.recentProgress) < 100)
+
+    suite.test(f"{suite_name}.whatever", f"Expected the first {meta_stream_count} triggers to processes 1 record per trigger", 
+               dependsOn=[suite.lastTestId()], 
+               testFunction = lambda: first_n_equal_one(orders_table))
+
+    suite.test(f"{suite_name}.exists", "Checkpoint directory exists", dependsOn=[suite.lastTestId()],
+             testFunction = lambda: len(dbutils.fs.ls(f"{orders_checkpoint_path}/metadata")) > 0)
+
+    suite.test(f"{suite_name}.order_total", f"Expected {meta_orders_count + meta_stream_count:,d} orders ({meta_stream_count} new)", 
+               dependsOn=[suite.lastTestId()], 
+               testFunction = lambda: spark.read.table(orders_table).count() == meta_orders_count + meta_stream_count)
+
+  except Exception as e:
+    query = None
+    suite.failPreReq(f"{suite_name}.prereq", e, [suite.lastTestId()])
   
   daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
   
-  print("Stopping the stream...")
-  query.stop()
+  if query:
+    print("Stopping the stream...")
+    query.stop()
 
   check_b_passed = suite.passed
   suite.displayResults()
@@ -139,37 +155,42 @@ def reality_check_05_c():
   
   suite_name = "ex.05.c"
   suite = TestSuite()
-  
-  query = wait_for_stream_start(line_items_table, meta_stream_count)
-  print("Processing results...")
-
-  suite.test(f"{suite_name}.min-count", f"Expected at least {meta_stream_count:,d} triggers", 
-             testFunction = lambda: len(query.recentProgress) >= meta_stream_count)
-  
-  suite.test(f"{suite_name}.max-count", f"Expected less than 100 triggers", dependsOn=[suite.lastTestId()], 
-             testFunction = lambda: len(query.recentProgress) < 100)
-
-  suite.test(f"{suite_name}.whatever", f"Expected the first {meta_stream_count:,d} triggers to processes 1 record per trigger", 
-             dependsOn=[suite.lastTestId()], 
-             testFunction = lambda: first_n_equal_one(line_items_table))
-
-  suite.test(f"{suite_name}.exists", "Checkpoint directory exists", dependsOn=[suite.lastTestId()],
-           testFunction = lambda: len(dbutils.fs.ls(f"{line_items_checkpoint_path}/metadata")) > 0)
 
   try:
-    new_count = spark.read.json(stream_path).select("orderId", explode("products")).count()
-    expected_li_count = meta_line_items_count + new_count
-    suite.test(f"{suite_name}.li_total", f"Expected {expected_li_count:,d} records, ({new_count} new)", 
+    query = wait_for_stream_start(line_items_table, meta_stream_count)
+    print("Processing results...")
+
+    suite.test(f"{suite_name}.min-count", f"Expected at least {meta_stream_count:,d} triggers", 
+               testFunction = lambda: len(query.recentProgress) >= meta_stream_count)
+
+    suite.test(f"{suite_name}.max-count", f"Expected less than 100 triggers", dependsOn=[suite.lastTestId()], 
+               testFunction = lambda: len(query.recentProgress) < 100)
+
+    suite.test(f"{suite_name}.whatever", f"Expected the first {meta_stream_count:,d} triggers to processes 1 record per trigger", 
                dependsOn=[suite.lastTestId()], 
-               testFunction = lambda: spark.read.table(line_items_table).count() == expected_li_count)
+               testFunction = lambda: first_n_equal_one(line_items_table))
+
+    suite.test(f"{suite_name}.exists", "Checkpoint directory exists", dependsOn=[suite.lastTestId()],
+             testFunction = lambda: len(dbutils.fs.ls(f"{line_items_checkpoint_path}/metadata")) > 0)
+
+    try:
+      new_count = spark.read.json(stream_path).select("orderId", explode("products")).count()
+      expected_li_count = meta_line_items_count + new_count
+      suite.test(f"{suite_name}.li_total", f"Expected {expected_li_count:,d} records, ({new_count} new)", 
+                 dependsOn=[suite.lastTestId()], 
+                 testFunction = lambda: spark.read.table(line_items_table).count() == expected_li_count)
+    except Exception as e:
+      suite.failPreReq(f"{suite_name}.prereq-a", e, [suite.lastTestId()])
+
   except Exception as e:
-    suite.fail(f"{suite_name}.li_total", dependsOn=[suite.lastTestId()], 
-               description=f"""Able to execute prerequisite query.<p style='max-width: 1024px; overflow-x:auto'>{e}</p>""")
+    query = None
+    suite.failPreReq(f"{suite_name}.prereq-b", e, [suite.lastTestId()])
   
   daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
   
-  print("Stopping the stream...")
-  query.stop()
+  if query:
+    print("Stopping the stream...")
+    query.stop()
 
   check_c_passed = suite.passed
   suite.displayResults()
@@ -203,9 +224,8 @@ def reality_check_05_final():
                      dependsOn = [suite.lastTestId()], 
                      testFunction = lambda: spark.read.table(line_items_table).count() == expected_li_count)
   except Exception as e:
-    suite.fail(f"{suite_name}.li_total", dependsOn=[suite.lastTestId()],
-               description=f"""Able to execute prerequisite query.<p style='max-width: 1024px; overflow-x:auto'>{e}</p>""")
-  
+    suite.failPreReq(f"{suite_name}.prereq", e, [suite.lastTestId()])
+
   suite.test(f"{suite_name}.p-count", f"Expected {meta_products_count} products", 
              dependsOn = [suite.lastTestId()], 
              testFunction = lambda: spark.read.table(products_table).count() == meta_products_count)

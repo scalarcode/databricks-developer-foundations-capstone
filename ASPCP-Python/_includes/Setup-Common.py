@@ -335,6 +335,10 @@ class TestSuite(object):
     testCase = TestCase(id=id, description=description, testFunction=testFunction, dependsOn=dependsOn, escapeHTML=escapeHTML, points=points)
     return self.addTest(testCase)
   
+  def failPreReq(self, id:str, e:Exception, dependsOn:Iterable[str]=[]):
+    self.fail(id=id, points=1, dependsOn=dependsOn, escapeHTML=False,
+              description=f"""<div>Execute prerequisites.</div><div style='max-width: 1024px; overflow-x:auto'>{e}</div>""")
+    
   def fail(self, id:str, description:str, points:int=1, dependsOn:Iterable[str]=[], escapeHTML:bool=False):
     testCase = TestCase(id=id, description=description, testFunction=lambda: False, dependsOn=dependsOn, escapeHTML=escapeHTML, points=points)
     return self.addTest(testCase)
