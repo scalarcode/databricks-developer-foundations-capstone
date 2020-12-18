@@ -12,7 +12,7 @@
 # MAGIC 
 # MAGIC With our four historical datasets properly loaded, we can now begin to process the "current" orders.
 # MAGIC 
-# MAGIC In thise case, the new "system" is landing one JSON file per order into cloud storage.
+# MAGIC In this case, the new "system" is landing one JSON file per order into cloud storage.
 # MAGIC 
 # MAGIC We can process these JSON files as a stream of orders under the assumption that new orders are continually added to this dataset.
 # MAGIC 
@@ -53,7 +53,7 @@
 # MAGIC 
 # MAGIC Furthermore, creating a stream from JSON files will first require you to specify the schema - you can "cheat" and infer that schema from some of the JSON files before starting the stream.
 # MAGIC 
-# MAGIC One last note; you will be appending to a Delta table after which the final record count will be validated - should you restart the stream, you will enevitably append duplicate records to these tables forcing the validation to fail. You can address this issue by re-running **Exercise #3** which would presumably delete and/or overwrite the datasets, putting them back to their default state for this exercise.
+# MAGIC One last note; you will be appending to a Delta table after which the final record count will be validated - should you restart the stream, you will inevitably append duplicate records to these tables forcing the validation to fail. You can address this issue by re-running **Exercise #3** which would presumably delete and/or overwrite the datasets, putting them back to their default state for this exercise.
 
 # COMMAND ----------
 
@@ -108,12 +108,11 @@ registration_id = "FILL_IN"
 # COMMAND ----------
 
 # MAGIC %md ### Reality Check #5.A
-# MAGIC Run the following command to ensure that you are on track:<br/>
-# MAGIC (a full assessment will be made at the end of this exercise)
+# MAGIC Run the following command to ensure that you are on track:
 
 # COMMAND ----------
 
-reality_check_05_A()
+reality_check_05_a()
 
 # COMMAND ----------
 
@@ -156,12 +155,11 @@ reality_check_05_A()
 # COMMAND ----------
 
 # MAGIC %md ### Reality Check #5.B
-# MAGIC Run the following command to ensure that you are on track:<br/>
-# MAGIC (a full assessment will be made at the end of this exercise)
+# MAGIC Run the following command to ensure that you are on track:
 
 # COMMAND ----------
 
-reality_check_05_B()
+reality_check_05_b()
 
 # COMMAND ----------
 
@@ -171,7 +169,7 @@ reality_check_05_B()
 # MAGIC 
 # MAGIC Just like before, our goal is simple, ingest the data, transform it as required by the **`line_items`** table's schema, and append these new records to our existing table.
 # MAGIC 
-# MAGIC Note: we are processing the same stream twice - there are other patterns to do this more effeciently, but for this exercise, we want to keep the design simple.<br/>
+# MAGIC Note: we are processing the same stream twice - there are other patterns to do this more efficiently, but for this exercise, we want to keep the design simple.<br/>
 # MAGIC The good news here is that you can copy most of the code from the previous step to get you started here.
 # MAGIC 
 # MAGIC **In this step you will need to:**
@@ -210,14 +208,14 @@ reality_check_05_B()
 
 # COMMAND ----------
 
-reality_check_05_C()
+reality_check_05_c()
 
 # COMMAND ----------
 
-# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #4 - Final Assessments</h2>
+# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #5 - Final Check</h2>
 # MAGIC 
 # MAGIC Run the following command to make sure this exercise is complete:
 
 # COMMAND ----------
 
-full_assessment_05()
+reality_check_05_final()

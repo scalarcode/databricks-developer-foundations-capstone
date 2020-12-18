@@ -17,10 +17,63 @@ def getTag(tagName: str, defaultValue: str = None) -> str:
 def getLessonName() -> str:
   return dbutils.entry_point.getDbutils().notebook().getContext().notebookPath().getOrElse(None).split("/")[-1]
 
-def html_row(name, value, description):
-  return f"""<tr><td style="font-size:16px; font-weight:bold; color:green; padding: 2px 1em 0 0; vertical-align:top; white-space:nowrap">{name}</td>
-                 <td style="font-size:16px; font-weight:bold; color:blue;  padding: 2px 1em 0 0; vertical-align:top; white-space:nowrap">{value}</td>
-                 <td style="font-size:16px; padding: 2px 1em 0 0; vertical-align:top">{description}</td></tr>"""
+padding = "{padding}"
+border_color = "#CDCDCD"
+font = "font-size:16px;"
+weight = "font-weight:bold;"
+align = "vertical-align:top;"
+border = f"border-bottom:1px solid {border_color};"
+
+def html_intro():
+  return """<html><body><table style="width:100%">
+            <p style="font-size:16px">The following variables and functions have been defined for you.<br/>Please refer to them in the following instructions.</p>"""
+
+def html_row_var(name, value, description):
+  return f"""<tr><td style="{font} {weight} {padding} {align} white-space:nowrap; color:green;">{name}</td>
+                 <td style="{font} {weight} {padding} {align} white-space:nowrap; color:blue;">{value}</td>
+             </tr><tr><td style="{border} {font} {padding}">&nbsp;</td>
+                 <td style="{border} {font} {padding} {align}">{description}</td></tr>"""
+
+def html_row_fun(name, description):
+  return f"""<tr><td style="{border}; {font} {padding} {align} {weight} white-space:nowrap; color:green;">{name}</td>
+                 <td style="{border}; {font} {padding} {align}">{description}</td></td></tr>"""
+
+def html_header():
+  return f"""<tr><th style="{border} padding: 0 1em 0 0; text-align:left">Variable/Function</th>
+                 <th style="{border} padding: 0 1em 0 0; text-align:left">Description</th></tr>"""
+
+def html_username():
+  return html_row_var("username", username, """This is the email address that you signed into Databricks with""")
+
+def html_working_dir():
+  return html_row_var("working_dir", working_dir, """This is the directory in which all work should be conducted""")
+
+def html_user_db():
+  return html_row_var("user_db", user_db, """The name of the database you will use for this project.""")
+
+def html_orders_table():
+  return html_row_var("orders_table", orders_table, """The name of the orders table.""")
+
+def html_sales_reps_table():
+  return html_row_var("sales_reps_table", sales_reps_table, """The name of the sales reps table.""")
+
+def html_products_table():
+  return html_row_var("products_table", products_table, """The name of the products table.""")
+
+def html_line_items_table():
+  return html_row_var("line_items_table", line_items_table, """The name of the line items table.""")
+
+batch_path_desc = """The location of the combined, raw, batch of orders."""
+def html_batch_source_path():
+  return html_row_var("batch_source_path", batch_target_path, batch_path_desc)
+def html_batch_target_path():
+  return html_row_var("batch_target_path", batch_target_path, batch_path_desc)
+
+def html_reality_check_final(fun_name):
+  return html_row_fun(fun_name, """A utility function for validating the entire exercise""")
+  
+def html_reality_check(fun_name, exercise):
+  return html_row_fun(fun_name, f"""A utility function for validating Exercise #{exercise}""")
 
 def checkSchema(schemaA, schemaB, keepOrder=True, keepNullable=False): 
   # Usage: checkSchema(schemaA, schemaB, keepOrder=false, keepNullable=false)
@@ -62,7 +115,7 @@ class DatabricksAcademyLogger:
     try:
       content = {
         "tags":       dict(map(lambda x: (x[0], str(x[1])), getTags().items())),
-        "moduleName": sku,
+        "moduleName": dataset_name,
         "lessonName": getLessonName(),
         "orgId":      getTag("orgId", "unknown"),
         "username":   getTag("user", "unknown"),
@@ -281,6 +334,10 @@ class TestSuite(object):
     testFunction = lambda: valueA == valueB
     testCase = TestCase(id=id, description=description, testFunction=testFunction, dependsOn=dependsOn, escapeHTML=escapeHTML, points=points)
     return self.addTest(testCase)
+  
+  def fail(self, id:str, description:str, points:int=1, dependsOn:Iterable[str]=[], escapeHTML:bool=False):
+    testCase = TestCase(id=id, description=description, testFunction=lambda: False, dependsOn=dependsOn, escapeHTML=escapeHTML, points=points)
+    return self.addTest(testCase)
     
   def testFloats(self, id:str, description:str, valueA, valueB, tolerance=0.01, points:int=1, dependsOn:Iterable[str]=[], escapeHTML:bool=False):
     testFunction = lambda: compareFloats(valueA, valueB, tolerance)
@@ -348,13 +405,13 @@ import re
 # be written into so as to further isolating changes from other students running the same material.
 username = getTag("user")
 
-# The course SKU is simply the
+# The course dataset_name is simply the
 # unique identifier for this project
-sku = "INT-ASPCP-v1"
+dataset_name = "apache-spark-programming-capstone"
 
 # The path to our user's working directory. This combines both the
-# username and sku to create a "globally unique" folder
-working_dir = f"dbfs:/user/{username}/dbacademy/{sku}"
+# username and dataset_name to create a "globally unique" folder
+working_dir = f"dbfs:/user/{username}/dbacademy/{dataset_name}"
 meta_dir = f"{working_dir}/raw/orders/batch/2017.txt"
 
 batch_2017_path = f"{working_dir}/raw/orders/batch/2017.txt"
@@ -382,13 +439,16 @@ question_1_results_table = "question_1_results"
 question_2_results_table = "question_2_results"
 question_3_results_table = "question_3_results"
 
-meta = spark.read.json(f"{working_dir}/raw/_meta/meta.json").first()
-meta_batch_count_2017 = meta["batchCount2017"]
-meta_batch_count_2018 = meta["batchCount2018"]
-meta_batch_count_2019 = meta["batchCount2019"]
-meta_products_count = meta["productsCount"]
-meta_orders_count = meta["ordersCount"]
-meta_line_items_count = meta["lineItemsCount"]
-meta_sales_reps_count = meta["salesRepsCount"]
-meta_stream_count = meta["streamCount"]
-meta_ssn_format_count = meta["ssnFormatCount"]
+def load_meta():
+  global meta, meta_batch_count_2017, meta_batch_count_2018, meta_batch_count_2019, meta_products_count, meta_orders_count, meta_line_items_count, meta_sales_reps_count, meta_stream_count, meta_ssn_format_count
+  
+  meta = spark.read.json(f"{working_dir}/raw/_meta/meta.json").first()
+  meta_batch_count_2017 = meta["batchCount2017"]
+  meta_batch_count_2018 = meta["batchCount2018"]
+  meta_batch_count_2019 = meta["batchCount2019"]
+  meta_products_count = meta["productsCount"]
+  meta_orders_count = meta["ordersCount"]
+  meta_line_items_count = meta["lineItemsCount"]
+  meta_sales_reps_count = meta["salesRepsCount"]
+  meta_stream_count = meta["streamCount"]
+  meta_ssn_format_count = meta["ssnFormatCount"]

@@ -3,16 +3,24 @@
 
 # COMMAND ----------
 
-html = "<html><body><table>"
-html += """<p style="font-size:16px">The following variables have been defined for you.<br/>Please refer to them in the following instructions."""
-html += """<tr><th style="padding: 0 1em 0 0; text-align:left">Variable</th><th style="padding: 0 1em 0 0; text-align:left">Value</th><th style="padding: 0 1em 0 0; text-align:left">Description</th></tr>"""
+load_meta()
 
-html += html_row("username", username, """This is the email address that you signed into Databricks with. It is used here to create a "globally unique" working directory.""")
-html += html_row("working_dir", working_dir, """This is directory in which all work should be conducted. This helps to ensure there are not conflicts with other users in the workspace.""")
-html += html_row("user_db", user_db, """The name of the database you will use for this project.""")
-html += html_row("products_table", products_table, """The name of the products table.""")
-html += html_row("line_items_table", line_items_table, """The name of the line items table.""")
-html += html_row("products_xml_path", products_xml_path, "The location of the product's XML file")
+# COMMAND ----------
+
+html = html_intro()
+html += html_header()
+
+html += html_username()
+html += html_working_dir()
+
+html += html_user_db()
+html += html_products_table()
+html += html_row_var("products_xml_path", products_xml_path, "The location of the product's XML file")
+
+html += html_reality_check("reality_check_04_a()", "4.A")
+html += html_reality_check("reality_check_04_b()", "4.B")
+html += html_reality_check("reality_check_04_c()", "4.C")
+html += html_reality_check_final("reality_check_04_final()")
 
 html += "</table></body></html>"
 
@@ -61,7 +69,7 @@ check_final_passed = False
 
 # COMMAND ----------
 
-def reality_check_04_A():
+def reality_check_04_a():
   global check_a_passed
   
   suite_name = "ex.04.a"
@@ -77,7 +85,7 @@ def reality_check_04_A():
 
 # COMMAND ----------
 
-def reality_check_04_B():
+def reality_check_04_b():
   global check_b_passed
   
   suite_name = "ex.04.b"
@@ -91,7 +99,7 @@ def reality_check_04_B():
 
 # COMMAND ----------
 
-def reality_check_04_C():
+def reality_check_04_c():
   global check_c_passed
   from pyspark.sql.functions import min, max
 
@@ -111,9 +119,8 @@ def reality_check_04_C():
   suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId()],
              testFunction = lambda: checkSchema(spark.read.table(products_table).schema, expectedProductSchema, False, False))
 
-  actual = spark.read.table(products_table).count()
-  suite.testEquals(f"{suite_name}.count", f"Expected {meta_products_count} records, found {actual}", 
-                   actual, meta_products_count, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.count", f"Expected {meta_products_count} records", dependsOn=[suite.lastTestId()],
+            testFunction = lambda: spark.read.table(products_table).count() == meta_products_count)
 
   suite.test(f"{suite_name}.min-color_adj", f"Sample A of color_adj (valid values)", dependsOn=[suite.lastTestId()],
              testFunction = lambda: spark.read.table(products_table).select(min(col("color_adj"))).first()[0] == 1.0)
@@ -134,7 +141,7 @@ def reality_check_04_C():
 
 # COMMAND ----------
 
-def full_assessment_04():
+def reality_check_04_final():
   global check_final_passed
   from pyspark.sql.functions import col
 
@@ -142,8 +149,8 @@ def full_assessment_04():
   suite = TestSuite()
   
   suite.testEquals(f"{suite_name}.a-passed", "Reality Check 04.A passed", check_a_passed, True)
-  suite.testEquals(f"{suite_name}.b-passed", "Reality Check 04.B passed", check_b_passed, True, dependsOn=[suite.lastTestId()])
-  suite.testEquals(f"{suite_name}.c-passed", "Reality Check 04.C passed", check_c_passed, True, dependsOn=[suite.lastTestId()])
+  suite.testEquals(f"{suite_name}.b-passed", "Reality Check 04.B passed", check_b_passed, True)
+  suite.testEquals(f"{suite_name}.c-passed", "Reality Check 04.C passed", check_c_passed, True)
 
   check_final_passed = suite.passed
 

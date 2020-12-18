@@ -21,11 +21,9 @@
 # MAGIC 
 # MAGIC Our only goal here is to unify all the datasets while tracking the source of each record (ingested file name and ingested timestamp) should additional problems arise.
 # MAGIC 
-# MAGIC Because we are only conserned with ingestion at this stage, the majority of the fields will be ingested as simple strings and in future exercises we will address this issue (and others) with various transformations.
+# MAGIC Because we are only concerned with ingestion at this stage, the majority of the fields will be ingested as simple strings and in future exercises we will address this issue (and others) with various transformations.
 # MAGIC 
 # MAGIC As you progress, several "reality checks" will be provided to you help ensure that you are on track - simply run the corresponding command after implementing the corresponding solution.
-# MAGIC 
-# MAGIC At the end of this exercise, a full assessment will be provided.
 # MAGIC 
 # MAGIC This exercise is broken up into 3 steps:
 # MAGIC * Exercise 2.A - Ingest Fixed-Width File
@@ -179,38 +177,12 @@ fixed_width_column_defs = {
 
 # COMMAND ----------
 
-# DBTITLE 0,Ingest 2017 Fixed-Width
-# ANSWER
-from pyspark.sql.functions import col, length, ltrim, when, lit, input_file_name, current_timestamp
-
-batch_2017_df = spark.read.text(batch_2017_path)
-
-for column in fixed_width_column_defs:
-  pos, width = fixed_width_column_defs[column]
-  
-  batch_2017_df = batch_2017_df.withColumn(column, ltrim(col("value").substr(pos, width)))
-  batch_2017_df = batch_2017_df.withColumn(column, when(length(col(column)) == 0, lit(None)).otherwise(col(column)))
-
-batch_2017_df = (batch_2017_df
-  .drop("value")
-  .withColumn("ingest_file_name", input_file_name())
-  .withColumn("ingested_at", current_timestamp())
-)
-
-dbutils.fs.rm(batch_target_path, True)
-batch_2017_df.write.option("overwriteSchema", True).mode("overwrite").format("delta").save(batch_target_path)
-
-display(batch_2017_df)
-
-# COMMAND ----------
-
 # MAGIC %md ### Reality Check #2.A
-# MAGIC Run the following command to ensure that you are on track:<br/>
-# MAGIC (a full assessment will be made at the end of this exercise)
+# MAGIC Run the following command to ensure that you are on track:
 
 # COMMAND ----------
 
-reality_check_02_A()
+reality_check_02_a()
 
 # COMMAND ----------
 
@@ -241,16 +213,15 @@ reality_check_02_A()
 # COMMAND ----------
 
 # MAGIC %md ### Reality Check #2.B
-# MAGIC Run the following command to ensure that you are on track:<br/>
-# MAGIC (a full assessment will be made at the end of this exercise)
+# MAGIC Run the following command to ensure that you are on track:
 
 # COMMAND ----------
 
-reality_check_02_B()
+reality_check_02_b()
 
 # COMMAND ----------
 
-# MAGIC %md ## Exercise #2.C - Ingest Comma-Separted File
+# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #2.C - Ingest Comma-Separted File</h2>
 # MAGIC 
 # MAGIC **In this step you will need to:**
 # MAGIC 1. Use the variable **`batch_2019_path`**, and **`dbutils.fs.head`** to investigate the 2019 batch file, if needed.
@@ -281,19 +252,18 @@ reality_check_02_B()
 # COMMAND ----------
 
 # MAGIC %md ### Reality Check #2.C
-# MAGIC Run the following command to ensure that you are on track:<br/>
-# MAGIC (a full assessment will be made at the end of this exercise)
+# MAGIC Run the following command to ensure that you are on track:
 
 # COMMAND ----------
 
-reality_check_02_C()
+reality_check_02_c()
 
 # COMMAND ----------
 
-# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #2 - Final Assessments</h2>
+# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #2 - Final Check</h2>
 # MAGIC 
 # MAGIC Run the following command to make sure this exercise is complete:
 
 # COMMAND ----------
 
-full_assessment_02()
+reality_check_02_final()

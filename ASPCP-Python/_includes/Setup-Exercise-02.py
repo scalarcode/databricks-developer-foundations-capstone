@@ -3,16 +3,26 @@
 
 # COMMAND ----------
 
-html = "<html><body><table>"
-html += """<p style="font-size:16px">The following variables have been defined for you.<br/>Please refer to them in the following instructions."""
-html += """<tr><th style="padding: 0 1em 0 0; text-align:left">Variable</th><th style="padding: 0 1em 0 0; text-align:left">Value</th><th style="padding: 0 1em 0 0; text-align:left">Description</th></tr>"""
+load_meta()
 
-html += html_row("username", username, """This is the email address that you signed into Databricks with. It is used here to create a "globally unique" working directory.""")
-html += html_row("working_dir", working_dir, """This is directory in which all work should be conducted. This helps to ensure there are not conflicts with other users in the workspace.""")
-html += html_row("batch_2017_path", batch_2017_path, """The path to the 2017 batch of orders.""")
-html += html_row("batch_2018_path", batch_2018_path, """The path to the 2018 batch of orders.""")
-html += html_row("batch_2019_path", batch_2019_path, """The path to the 2019 batch of orders.""")
-html += html_row("batch_target_path", batch_target_path, """The location of the new, unified, raw, batch of orders & sales reps.""")
+# COMMAND ----------
+
+html = html_intro()
+html += html_header()
+
+html += html_username()
+html += html_working_dir()
+
+html += html_row_var("batch_2017_path", batch_2017_path, """The path to the 2017 batch of orders""")
+html += html_row_var("batch_2018_path", batch_2018_path, """The path to the 2018 batch of orders""")
+html += html_row_var("batch_2019_path", batch_2019_path, """The path to the 2019 batch of orders""")
+html += html_row_var("batch_target_path", batch_target_path, """The location of the new, unified, raw, batch of orders & sales reps""")
+
+
+html += html_reality_check("reality_check_02_a()", "2.A")
+html += html_reality_check("reality_check_02_b()", "2.B")
+html += html_reality_check("reality_check_02_c()", "2.C")
+html += html_reality_check_final("reality_check_02_final()")
 
 html += "</table></body></html>"
 
@@ -43,6 +53,78 @@ def createExpectedSchema():
                      StructField("product_sold_price", StringType(), True),
                      StructField("ingest_file_name", StringType(), True),
                      StructField("ingested_at", TimestampType(), True)])
+
+def no_white_space():
+  from pyspark.sql.functions import col, trim, ltrim
+  for column in string_columns:
+    if 0 != spark.read.format("delta").load(batch_target_path).filter(col(column) != trim(col(column))).count():
+      return False
+  return True
+
+def no_empty_strings():
+  from pyspark.sql.functions import col, trim, ltrim
+  for column in string_columns:
+    if 0 != spark.read.format("delta").load(batch_target_path).filter(trim(col(column)) == lit("")).count():
+      return False
+  return True
+
+def no_null_strings():
+  from pyspark.sql.functions import col, trim, ltrim
+  for column in string_columns:
+    if 0 != spark.read.format("delta").load(batch_target_path).filter(trim(col(column)) == lit("null")).count():
+      return False
+  return True
+
+def valid_ingest_file_name_2017():
+  return valid_ingest_file_name(2017, "txt")
+
+def valid_ingest_file_name_2018():
+  return valid_ingest_file_name(2018, "csv")
+
+def valid_ingest_file_name_2019():
+  return valid_ingest_file_name(2019, "csv")
+
+def valid_ingest_file_name(expected_year, expected_ext):
+  from pyspark.sql.functions import from_unixtime, year, col
+  try:
+    tempDF = spark.read.format("delta").load(batch_target_path).withColumn("submitted_at", from_unixtime("submitted_at").cast("timestamp"))
+    if 0 != tempDF.filter(year(col("submitted_at")) == expected_year).filter(col("ingest_file_name").endswith(f"{username}/dbacademy/{dataset_name}/raw/orders/batch/{expected_year}.{expected_ext}") == False).count():
+      return False
+    return True
+  except Exception as e:
+    print(e)
+
+def valid_ingest_date_2017():
+  valid_ingest_date(meta_batch_count_2017)
+  
+def valid_ingest_date_2018():
+  valid_ingest_date(meta_batch_count_2017+meta_batch_count_2018)
+  
+def valid_ingest_date_2019():
+  valid_ingest_date(meta_batch_count_2017+meta_batch_count_2018+meta_batch_count_2019)
+  
+def valid_ingest_date(expected):
+  from pyspark.sql.functions import year, month, dayofmonth, col
+  from datetime import datetime
+  
+  today = datetime.today()
+  actual = spark.read.format("delta").load(batch_target_path).filter(year("ingested_at") == today.year).filter(month("ingested_at") == today.month).filter(dayofmonth("ingested_at") == today.day).count()
+  return actual == expected
+
+def valid_values():
+  from pyspark.sql.functions import length, col
+  
+  if 0 != spark.read.format("delta").load(batch_target_path).select(length(col("submitted_at")).alias("length")).filter("length != 10").count(): return False
+  if 0 != spark.read.format("delta").load(batch_target_path).select(length(col("order_id")).alias("length")).filter("length != 36").count(): return False
+  if 0 != spark.read.format("delta").load(batch_target_path).select(length(col("customer_id")).alias("length")).filter("length != 36").count(): return False
+  if 0 != spark.read.format("delta").load(batch_target_path).select(length(col("sales_rep_id")).alias("length")).filter("length != 36").count(): return False
+  if 0 != spark.read.format("delta").load(batch_target_path).select(length(col("sales_rep_ssn")).alias("length")).filter(col("length").isin(11,9) == False).count(): return False
+  if 0 != spark.read.format("delta").load(batch_target_path).select(length(col("sales_rep_state")).alias("length")).filter("length != 2").count(): return False
+  if 0 != spark.read.format("delta").load(batch_target_path).select(length(col("sales_rep_zip")).alias("length")).filter("length != 5").count(): return False
+  if 0 != spark.read.format("delta").load(batch_target_path).select(length(col("shipping_address_zip")).alias("length")).filter("length != 5").count(): return False
+  if 0 != spark.read.format("delta").load(batch_target_path).select(length(col("product_id")).alias("length")).filter("length != 36").count(): return False
+  return True
+
 expectedSchema = createExpectedSchema()
 
 expected_columns = list(map(lambda f: f.name, expectedSchema))
@@ -57,7 +139,7 @@ check_final_passed = False
 
 # COMMAND ----------
 
-def reality_check_02_A():
+def reality_check_02_a():
   global check_a_passed
   
   suite_name = "ex.02.a"
@@ -72,13 +154,18 @@ def reality_check_02_A():
   suite.test(f"{suite_name}.has_parquet", "Found at least one Parquet part-file", dependsOn=[suite.lastTestId()],
              testFunction = lambda: len(list(filter(lambda f: f.path.endswith(".parquet"), dbutils.fs.ls( batch_target_path)))) > 0)
   
-  expected = meta_batch_count_2017
-  actual = spark.read.format("delta").load(batch_target_path).count()
-  suite.test(f"{suite_name}.count", f"Expected {expected:,d} records, found {actual:,d}", dependsOn=[suite.lastTestId()],
-             testFunction = lambda: actual == expected)
-  
-  suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId()],
+  suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: checkSchema(spark.read.format("delta").load(batch_target_path).schema, expectedSchema, False, False))
+
+  suite.test(f"{suite_name}.count", f"Expected {meta_batch_count_2017:,d} records", dependsOn=[suite.lastTestId()],
+             testFunction = lambda: spark.read.format("delta").load(batch_target_path).count() == meta_batch_count_2017)
+
+  suite.test(f"{suite_name}.white-space", "No whitespace in column values, need to trim whitespace", testFunction=no_white_space, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.empty-strings", "No empty strings in column values, should be null literals", testFunction=no_empty_strings, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.null-strings", "No null strings, should be null literals", testFunction=no_null_strings, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.ingest-file", "Ingest file names are valid for 2017", testFunction=valid_ingest_file_name_2017, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.ingest-date", "Ingest date is valid for 2017", testFunction=valid_ingest_date_2017, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.values", "Key columns are the correct length (properly parsed)", testFunction=valid_values, dependsOn=[suite.lastTestId()])
   
   daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
   
@@ -87,7 +174,7 @@ def reality_check_02_A():
 
 # COMMAND ----------
 
-def reality_check_02_B():
+def reality_check_02_b():
   global check_b_passed
 
   suite_name = "ex.02.b"
@@ -102,14 +189,20 @@ def reality_check_02_B():
   suite.test(f"{suite_name}.has_parquet", "Found at least one Parquet part-file", dependsOn=[suite.lastTestId()],
              testFunction = lambda: len(list(filter(lambda f: f.path.endswith(".parquet"), dbutils.fs.ls( batch_target_path)))) > 0)
   
-  expected = meta_batch_count_2017+meta_batch_count_2018
-  actual = spark.read.format("delta").load(batch_target_path).count()
-  suite.test(f"{suite_name}.count", f"Expected {expected:,d} records, found {actual:,d}", dependsOn=[suite.lastTestId()],
-             testFunction = lambda: actual == expected)
-  
-  suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId()],
+  suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: checkSchema(spark.read.format("delta").load(batch_target_path).schema, expectedSchema, False, False))
   
+  suite.test(f"{suite_name}.count", f"Expected {meta_batch_count_2017+meta_batch_count_2018:,d} records", dependsOn=[suite.lastTestId()], 
+             testFunction = lambda: spark.read.format("delta").load(batch_target_path).count() == meta_batch_count_2017+meta_batch_count_2018)
+  
+  suite.test(f"{suite_name}.white-space", "No whitespace in column values, need to trim whitespace", testFunction=no_white_space, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.empty-strings", "No empty strings in column values, should be null literals", testFunction=no_empty_strings, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.null-strings", "No null strings, should be null literals", testFunction=no_null_strings, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.ingest-file", "Ingest file names are valid for 2018", testFunction=valid_ingest_file_name_2018, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.ingest-date", "Ingest date is valid for 2018", testFunction=valid_ingest_date_2018, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.values", "Key columns are the correct length (properly parsed)", testFunction=valid_values, dependsOn=[suite.lastTestId()])
+
+
   daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
   
   check_b_passed = suite.passed
@@ -117,7 +210,7 @@ def reality_check_02_B():
 
 # COMMAND ----------
 
-def reality_check_02_C():
+def reality_check_02_c():
   global check_c_passed
 
   suite_name = "ex.02.c"
@@ -132,14 +225,19 @@ def reality_check_02_C():
   suite.test(f"{suite_name}.has_parquet", "Found at least one Parquet part-file", dependsOn=[suite.lastTestId()],
              testFunction = lambda: len(list(filter(lambda f: f.path.endswith(".parquet"), dbutils.fs.ls( batch_target_path)))) > 0)
   
-  expected = meta_batch_count_2017+meta_batch_count_2018+meta_batch_count_2019
-  actual = spark.read.format("delta").load(batch_target_path).count()
-  suite.test(f"{suite_name}.count", f"Expected {expected:,d} records, found {actual:,d}", dependsOn=[suite.lastTestId()],
-             testFunction = lambda: actual == expected)
-  
-  suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId()],
+  suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: checkSchema(spark.read.format("delta").load(batch_target_path).schema, expectedSchema, False, False))
-  
+
+  suite.test(f"{suite_name}.count", f"Expected {meta_batch_count_2017+meta_batch_count_2018+meta_batch_count_2019:,d} records", dependsOn=[suite.lastTestId()], 
+             testFunction = lambda: spark.read.format("delta").load(batch_target_path).count() == meta_batch_count_2017+meta_batch_count_2018+meta_batch_count_2019)
+
+  suite.test(f"{suite_name}.white-space", "No whitespace in column values, need to trim whitespace", testFunction=no_white_space, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.empty-strings", "No empty strings in column values, should be null literals", testFunction=no_empty_strings, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.null-strings", "No null strings, should be null literals", testFunction=no_null_strings, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.ingest-file", "Ingest file names are valid for 2019", testFunction=valid_ingest_file_name_2019, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.ingest-date", "Ingest date is valid for 2019", testFunction=valid_ingest_date_2019, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.values", "Key columns are the correct length (properly parsed)", testFunction=valid_values, dependsOn=[suite.lastTestId()])
+
   daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
   
   check_c_passed = suite.passed
@@ -147,19 +245,23 @@ def reality_check_02_C():
 
 # COMMAND ----------
 
-def full_assessment_02():
+def reality_check_02_final():
   global check_final_passed
   from pyspark.sql.functions import col, year, month, dayofmonth, from_unixtime
-  from datetime import datetime
 
   suite_name = "ex.02.all"
   suite = TestSuite()
   
   suite.testEquals(f"{suite_name}.a-passed", "Reality Check 02.A passed", check_a_passed, True)
-  suite.testEquals(f"{suite_name}.b-passed", "Reality Check 02.B passed", check_b_passed, True, dependsOn=[suite.lastTestId()])
-  suite.testEquals(f"{suite_name}.c-passed", "Reality Check 02.C passed", check_c_passed, True, dependsOn=[suite.lastTestId()])
+  id_a = suite.lastTestId()
   
-  suite.test(f"{suite_name}.exists", "Target directory exists", dependsOn=[suite.lastTestId()],  
+  suite.testEquals(f"{suite_name}.b-passed", "Reality Check 02.B passed", check_b_passed, True)
+  id_b = suite.lastTestId()
+  
+  suite.testEquals(f"{suite_name}.c-passed", "Reality Check 02.C passed", check_c_passed, True)
+  id_c = suite.lastTestId()
+  
+  suite.test(f"{suite_name}.exists", "Target directory exists", dependsOn=[id_a, id_b, id_c],  
              testFunction = lambda: len(list(filter(lambda f: f.path.endswith("/"), dbutils.fs.ls( batch_target_path)))) > 0)
   
   suite.test(f"{suite_name}.is_delta", "Using the Delta file format", dependsOn=[suite.lastTestId()],
@@ -168,56 +270,26 @@ def full_assessment_02():
   suite.test(f"{suite_name}.has_parquet", "Found at least one Parquet part-file", dependsOn=[suite.lastTestId()],
              testFunction = lambda: len(list(filter(lambda f: f.path.endswith(".parquet"), dbutils.fs.ls( batch_target_path)))) > 0)
 
-  expected = meta_batch_count_2017+meta_batch_count_2018+meta_batch_count_2019
-  actual = spark.read.format("delta").load(batch_target_path).count()
-  suite.test(f"{suite_name}.count", f"Expected {expected:,d} records, found{actual:,d}", dependsOn=[suite.lastTestId()],
-             testFunction = lambda: actual == expected)
-  
-  suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId()],
+  suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: checkSchema(spark.read.format("delta").load(batch_target_path).schema, expectedSchema, False, False))
 
-  def no_white_space():
-    from pyspark.sql.functions import col, trim, ltrim
-    for column in string_columns:
-      if 0 != spark.read.format("delta").load(batch_target_path).filter(col(column) != trim(col(column))).count():
-        return False
-    return True
+  suite.test(f"{suite_name}.count", f"Expected {meta_batch_count_2017+meta_batch_count_2018+meta_batch_count_2019:,d} records", dependsOn=[suite.lastTestId()], 
+             testFunction = lambda: spark.read.format("delta").load(batch_target_path).count() == meta_batch_count_2017+meta_batch_count_2018+meta_batch_count_2019)
 
   suite.test(f"{suite_name}.white-space", "No whitespace in column values, need to trim whitespace", testFunction=no_white_space, dependsOn=[suite.lastTestId()])
-  
-  def no_empty_strings():
-    from pyspark.sql.functions import col, trim, ltrim
-    for column in string_columns:
-      if 0 != spark.read.format("delta").load(batch_target_path).filter(trim(col(column)) == lit("")).count():
-        return False
-    return True
-    
   suite.test(f"{suite_name}.empty-strings", "No empty strings in column values, should be null literals", testFunction=no_empty_strings, dependsOn=[suite.lastTestId()])
-
-  def no_null_strings():
-    from pyspark.sql.functions import col, trim, ltrim
-    for column in string_columns:
-      if 0 != spark.read.format("delta").load(batch_target_path).filter(trim(col(column)) == lit("null")).count():
-        return False
-    return True
-    
   suite.test(f"{suite_name}.null-strings", "No null strings, should be null literals", testFunction=no_null_strings, dependsOn=[suite.lastTestId()])
-    
-  def valid_ingest_file_name():
-    for expectedYear, expectedExt in [(2017,"txt"),(2018,"csv"),(2019,"csv")]:
-      tempDF = spark.read.format("delta").load(batch_target_path).withColumn("submitted_at", from_unixtime("submitted_at").cast("timestamp"))
-      if 0 != tempDF.filter(year(col("submitted_at")) == expectedYear).filter(col("ingest_file_name").endswith(f"{username}/dbacademy/{sku}/raw/orders/batch/{expectedYear}.{expectedExt}") == False).count():
-        return False
-    return True
 
-  suite.test(f"{suite_name}.ingest-file", "Ingest file names are valid", testFunction=valid_ingest_file_name, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.ingest-file-2017", "Ingest file names are valid for 2017", testFunction=valid_ingest_file_name_2017, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.ingest-date-2017", "Ingest date is valid for 2017", testFunction=valid_ingest_date_2017, dependsOn=[suite.lastTestId()])
 
-  def valid_ingest_date():
-    today = datetime.today()
-    actual = spark.read.format("delta").load(batch_target_path).filter(year("ingested_at") == today.year).filter(month("ingested_at") == today.month).filter(dayofmonth("ingested_at") == today.day).count()
-    return actual == meta_batch_count_2017+meta_batch_count_2018+meta_batch_count_2019
-    
-  suite.test(f"{suite_name}.ingest-date", "Ingest date is valid", testFunction=valid_ingest_date, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.ingest-file-2018", "Ingest file names are valid for 2018", testFunction=valid_ingest_file_name_2018, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.ingest-date-2018", "Ingest date is valid for 2018", testFunction=valid_ingest_date_2018, dependsOn=[suite.lastTestId()])
+
+  suite.test(f"{suite_name}.ingest-file-2019", "Ingest file names are valid for 2019", testFunction=valid_ingest_file_name_2019, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.ingest-date-2019", "Ingest date is valid for 2019", testFunction=valid_ingest_date_2019, dependsOn=[suite.lastTestId()])
+  
+  suite.test(f"{suite_name}.values", "Key columns are the correct length (properly parsed)", testFunction=valid_values, dependsOn=[suite.lastTestId()])
     
   check_final_passed = suite.passed
     

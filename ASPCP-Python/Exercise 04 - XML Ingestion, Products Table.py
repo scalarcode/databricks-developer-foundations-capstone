@@ -8,11 +8,11 @@
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC # Exercise #4 - XML Ingestion, Proudcts Table
+# MAGIC # Exercise #4 - XML Ingestion, Products Table
 # MAGIC 
 # MAGIC The products being sold by our sales reps are itemized in an XML document which we will need to load.
 # MAGIC 
-# MAGIC Unlikes CSV, JSON, Parquet, & Delta, support for XML is not included with the default distribution of Apache Spark.
+# MAGIC Unlike CSV, JSON, Parquet, & Delta, support for XML is not included with the default distribution of Apache Spark.
 # MAGIC 
 # MAGIC Before we can load the XML document, we need additional support for a **`DataFrameReader`** that can processes XML files.
 # MAGIC 
@@ -77,12 +77,11 @@ registration_id = "FILL_IN"
 # COMMAND ----------
 
 # MAGIC %md ### Reality Check #4.A
-# MAGIC Run the following command to ensure that you are on track:<br/>
-# MAGIC (a full assessment will be made at the end of this exercise)
+# MAGIC Run the following command to ensure that you are on track:
 
 # COMMAND ----------
 
-reality_check_04_A()
+reality_check_04_a()
 
 # COMMAND ----------
 
@@ -91,9 +90,7 @@ reality_check_04_A()
 # MAGIC **In this step you will need to:**
 # MAGIC * Register the **spark-xml** library - edit your cluster configuration and then from the **Libraries** tab, install the following library:
 # MAGIC   * Type: **Maven**
-# MAGIC   * Group ID: **com.databricks**
-# MAGIC   * Artifact ID: **spark-xml_2.12**
-# MAGIC   * Version: **0.10.0**
+# MAGIC   * Coordinates: **com.databricks:spark-xml_2.12:0.10.0**
 # MAGIC 
 # MAGIC If you are unfamiliar with this processes, more information can be found in the <a href="https://docs.databricks.com/libraries/cluster-libraries.html" target="_blank">Cluster libraries documentation</a>.
 # MAGIC 
@@ -102,7 +99,7 @@ reality_check_04_A()
 
 # COMMAND ----------
 
-reality_check_04_B()
+reality_check_04_b()
 
 # COMMAND ----------
 
@@ -131,7 +128,7 @@ reality_check_04_B()
 # MAGIC   * **`size`**:**`string`**
 # MAGIC 
 # MAGIC * Exclude any records for which a **`price`** was not included - these represent products that are not yet available for sale.
-# MAGIC * Load the dataset to the [managed] delta table **`products`** (identified by the variable **`products_table`**)
+# MAGIC * Load the dataset to the managed delta table **`products`** (identified by the variable **`products_table`**)
 
 # COMMAND ----------
 
@@ -147,19 +144,18 @@ reality_check_04_B()
 # COMMAND ----------
 
 # MAGIC %md ### Reality Check #4.C
-# MAGIC Run the following command to ensure that you are on track:<br/>
-# MAGIC (a full assessment will be made at the end of this exercise)
+# MAGIC Run the following command to ensure that you are on track:
 
 # COMMAND ----------
 
-reality_check_04_C()
+reality_check_04_c()
 
 # COMMAND ----------
 
-# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #3 - Final Assessments</h2>
+# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #4 - Final Check</h2>
 # MAGIC 
 # MAGIC Run the following command to make sure this exercise is complete:
 
 # COMMAND ----------
 
-full_assessment_04()
+reality_check_04_final()

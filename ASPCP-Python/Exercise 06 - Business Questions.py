@@ -71,12 +71,11 @@ registration_id = "FILL_IN"
 # COMMAND ----------
 
 # MAGIC %md ### Reality Check #6.A
-# MAGIC Run the following command to ensure that you are on track:<br/>
-# MAGIC (a full assessment will be made at the end of this exercise)
+# MAGIC Run the following command to ensure that you are on track:
 
 # COMMAND ----------
 
-reality_check_06_A()
+reality_check_06_a()
 
 # COMMAND ----------
 
@@ -84,7 +83,7 @@ reality_check_06_A()
 # MAGIC ## How many orders were shipped to each state?
 # MAGIC 
 # MAGIC **In this step you will need to:**
-# MAGIC * Aggreate the orders by **`shipping_address_state`**
+# MAGIC * Aggregate the orders by **`shipping_address_state`**
 # MAGIC * Count the number of records for each state
 # MAGIC * Sort the results by **`count`**, in descending order
 # MAGIC * Save the results to the temporary view **`question_1_results`**, identified by the variable **`question_1_results_table`**
@@ -103,12 +102,11 @@ reality_check_06_A()
 # COMMAND ----------
 
 # MAGIC %md ### Reality Check #6.B
-# MAGIC Run the following command to ensure that you are on track:<br/>
-# MAGIC (a full assessment will be made at the end of this exercise)
+# MAGIC Run the following command to ensure that you are on track:
 
 # COMMAND ----------
 
-reality_check_06_B()
+reality_check_06_b()
 
 # COMMAND ----------
 
@@ -124,7 +122,7 @@ reality_check_06_B()
 # MAGIC * Limit the result to only green products (**`color`**).
 # MAGIC * Limit the result to orders shipped to North Carolina (**`shipping_address_state`**)
 # MAGIC * Limit the result to sales reps that initially submitted an improperly formatted SSN (**`_error_ssn_format`**)
-# MAGIC * Calulcate the avarage, minimum and maximum of **`product_sold_price`** - do not rename these columns after computing.
+# MAGIC * Calculate the average, minimum and maximum of **`product_sold_price`** - do not rename these columns after computing.
 # MAGIC * Save the results to the temporary view **`question_2_results`**, identified by the variable **`question_2_results_table`**
 # MAGIC * The temporary view should have the following three columns: **`avg(product_sold_price)`**, **`min(product_sold_price)`**, **`max(product_sold_price)`**
 # MAGIC * Collect the results to the driver
@@ -147,16 +145,15 @@ reality_check_06_B()
 # COMMAND ----------
 
 # MAGIC %md ### Reality Check #6.C
-# MAGIC Run the following command to ensure that you are on track:<br/>
-# MAGIC (a full assessment will be made at the end of this exercise)
+# MAGIC Run the following command to ensure that you are on track:
 
 # COMMAND ----------
 
-reality_check_06_C(ex_avg, ex_min, ex_max)
+reality_check_06_c(ex_avg, ex_min, ex_max)
 
 # COMMAND ----------
 
-# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #6.C - Question #3</h2>
+# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #6.D - Question #3</h2>
 # MAGIC ## What is the first and last name of the top earning sales rep based on net sales?
 # MAGIC 
 # MAGIC For this scenario...
@@ -171,10 +168,13 @@ reality_check_06_C(ex_avg, ex_min, ex_max)
 # MAGIC   * **`products`**, identified by the variable **`products_table`**
 # MAGIC   * **`sales_reps`**, identified by the variable **`sales_reps_table`**
 # MAGIC * Calculate the profit for each line item of an order as described above.
-# MAGIC * Aggregate the results by sales rep and then sum each reps' total profit.
+# MAGIC * Aggregate the results by the sales reps' first &amp; last name and then sum each reps' total profit.
 # MAGIC * Reduce the dataset to a single row for the sales rep with the largest profit.
 # MAGIC * Save the results to the temporary view **`question_3_results`**, identified by the variable **`question_3_results_table`**
-# MAGIC * The temporary view should have the following two columns: **`sales_rep_first_name`** and **`sales_rep_last_name`**
+# MAGIC * The temporary view should have the following three columns: 
+# MAGIC   * **`sales_rep_first_name`** - the first column by which to aggregate by
+# MAGIC   * **`sales_rep_last_name`** - the second column by which to aggregate by
+# MAGIC   * **`sum(total_profit)`** - the summation of the column **`total_profit`**
 
 # COMMAND ----------
 
@@ -190,19 +190,22 @@ reality_check_06_C(ex_avg, ex_min, ex_max)
 # COMMAND ----------
 
 # MAGIC %md ### Reality Check #6.D
-# MAGIC Run the following command to ensure that you are on track:<br/>
-# MAGIC (a full assessment will be made at the end of this exercise)
+# MAGIC Run the following command to ensure that you are on track:
 
 # COMMAND ----------
 
-reality_check_06_D()
+reality_check_06_d()
 
 # COMMAND ----------
 
-# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #6 - Final Assessments</h2>
+# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #6 - Final Check</h2>
 # MAGIC 
 # MAGIC Run the following command to make sure this exercise is complete:
 
 # COMMAND ----------
 
-full_assessment_06()
+check_d_passed
+
+# COMMAND ----------
+
+reality_check_06_final()

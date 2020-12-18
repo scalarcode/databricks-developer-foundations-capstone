@@ -85,12 +85,11 @@ registration_id = "FILL_IN"
 # COMMAND ----------
 
 # MAGIC %md ### Reality Check #3.A
-# MAGIC Run the following command to ensure that you are on track:<br/>
-# MAGIC (a full assessment will be made at the end of this exercise)
+# MAGIC Run the following command to ensure that you are on track:
 
 # COMMAND ----------
 
-reality_check_03_A()
+reality_check_03_a()
 
 # COMMAND ----------
 
@@ -101,7 +100,7 @@ reality_check_03_A()
 # MAGIC **In this step you will need to:**
 # MAGIC * Load the delta dataset we created in the previous exercise, identified by the variable **`batch_source_path`**.
 # MAGIC * Using that same dataset, create a temporary view identified by the variable **`batch_temp_view`**.
-# MAGIC * Cache the tempoary view.
+# MAGIC * Cache the temporary view.
 
 # COMMAND ----------
 
@@ -117,29 +116,28 @@ reality_check_03_A()
 # COMMAND ----------
 
 # MAGIC %md ### Reality Check #3.B
-# MAGIC Run the following command to ensure that you are on track:<br/>
-# MAGIC (a full assessment will be made at the end of this exercise)
+# MAGIC Run the following command to ensure that you are on track:
 
 # COMMAND ----------
 
-reality_check_03_B()
+reality_check_03_b()
 
 # COMMAND ----------
 
 # MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #3.C - Extract Sales Reps</h2>
 # MAGIC 
-# MAGIC Our batched orders from Exercise 02 contains thousands of orders and with every order, is the name, SSN, address and other information on the sales rep making the order.
+# MAGIC Our batched orders from Exercise #2 contains thousands of orders and with every order, is the name, SSN, address and other information on the sales rep making the order.
 # MAGIC 
 # MAGIC We can use this data to create a table of just our sales reps.
 # MAGIC 
 # MAGIC If you consider that we have only ~100 sales reps, but thousands of orders, we are going to have a lot of duplicate data in this space.
 # MAGIC 
-# MAGIC Also unique to this set of data, is the fact that social security numbers were not always sanitized meaning sometime they were formatted with hyphens and in other cases they were not - this is something we will have to address here
+# MAGIC Also unique to this set of data, is the fact that social security numbers were not always sanitized meaning sometime they were formatted with hyphens and in other cases they were not - this is something we will have to address here.
 # MAGIC 
 # MAGIC **In this step you will need to:**
 # MAGIC * Load the table **`batched_orders`** (identified by the variable **`batch_temp_view`**)
-# MAGIC * The SSN numbers have errors in them that we want to track - add the **`boolean`** column **`_error_ssn_format`** - for any case where **`sales_rep_ssn`** has a hypen in it, set ths value to **`true`** otherwise **`false`**
-# MAGIC * Convert varoius columns from their string representation to the specified type:
+# MAGIC * The SSN numbers have errors in them that we want to track - add the **`boolean`** column **`_error_ssn_format`** - for any case where **`sales_rep_ssn`** has a hypen in it, set this value to **`true`** otherwise **`false`**
+# MAGIC * Convert various columns from their string representation to the specified type:
 # MAGIC   * The column **`sales_rep_ssn`** should be represented as a **`Long`** (Note: You will have to first clean the column by removing extreneous hyphens in some records)
 # MAGIC   * The column **`sales_rep_zip`** should be represented as an **`Integer`**
 # MAGIC * Remove the columns not directly related to the sales-rep record:
@@ -147,7 +145,7 @@ reality_check_03_B()
 # MAGIC   * Shipping address fields: **`shipping_address_attention`**, **`shipping_address_address`**, **`shipping_address_city`**, **`shipping_address_state`**, **`shipping_address_zip`**
 # MAGIC   * Product fields: **`product_id`**, **`product_quantity`**, **`product_sold_price`**
 # MAGIC * Because there is one record per product ordered (many products per order), not to mention one sales rep placing many orders (many orders per sales rep), there will be duplicate records for our sales reps. Remove all duplicate records, making sure to exclude **`ingest_file_name`** and **`ingested_at`** from the evaluation of duplicate records
-# MAGIC * Load the dataset to the [managed] delta table **`sales_rep_scd`** (identified by the variable **`sales_reps_table`**)
+# MAGIC * Load the dataset to the managed delta table **`sales_rep_scd`** (identified by the variable **`sales_reps_table`**)
 # MAGIC 
 # MAGIC **Additional Requirements:**<br/>
 # MAGIC The schema for the **`sales_rep_scd`** table must be:
@@ -177,12 +175,11 @@ reality_check_03_B()
 # COMMAND ----------
 
 # MAGIC %md ### Reality Check #3.C
-# MAGIC Run the following command to ensure that you are on track:<br/>
-# MAGIC (a full assessment will be made at the end of this exercise)
+# MAGIC Run the following command to ensure that you are on track:
 
 # COMMAND ----------
 
-reality_check_03_C()
+reality_check_03_c()
 
 # COMMAND ----------
 
@@ -194,7 +191,7 @@ reality_check_03_C()
 # MAGIC 
 # MAGIC **In this step you will need to:**
 # MAGIC * Load the table **`batched_orders`** (identified by the variable **`batch_temp_view`**)
-# MAGIC * Convert varoius columns from their string representation to the specified type:
+# MAGIC * Convert various columns from their string representation to the specified type:
 # MAGIC   * The column **`submitted_at`** is a "unix epoch" (number of seconds since 1970-01-01 00:00:00 UTC) and should be represented as a **`Timestamp`**
 # MAGIC   * The column **`shipping_address_zip`** should be represented as an **`Integer`**
 # MAGIC * Remove the columns not directly related to the order record:
@@ -202,7 +199,7 @@ reality_check_03_C()
 # MAGIC   * Product fields: **`product_id`**, **`product_quantity`**, **`product_sold_price`**
 # MAGIC * Because there is one record per product ordered (many products per order), there will be duplicate records for each order. Remove all duplicate records, making sure to exclude **`ingest_file_name`** and **`ingested_at`** from the evaluation of duplicate records
 # MAGIC * Add the column **`submitted_yyyy_mm`** which is a **`string`** derived from **`submitted_at`** and is formatted as "**yyyy-MM**".
-# MAGIC * Load the dataset to the [managed] delta table **`orders`** (identified by the variable **`orders_table`**)
+# MAGIC * Load the dataset to the managed delta table **`orders`** (identified by the variable **`orders_table`**)
 # MAGIC   * In thise case, the data must also be partitioned by **`submitted_yyyy_mm`**
 # MAGIC 
 # MAGIC **Additional Requirements:**
@@ -234,12 +231,11 @@ reality_check_03_C()
 # COMMAND ----------
 
 # MAGIC %md ### Reality Check #3.D
-# MAGIC Run the following command to ensure that you are on track:<br/>
-# MAGIC (a full assessment will be made at the end of this exercise)
+# MAGIC Run the following command to ensure that you are on track:
 
 # COMMAND ----------
 
-reality_check_03_D()
+reality_check_03_d()
 
 # COMMAND ----------
 
@@ -253,10 +249,10 @@ reality_check_03_D()
 # MAGIC   * The correlating ID fields: **`order_id`** and **`product_id`**
 # MAGIC   * The two product-specific fields: **`product_quantity`** and **`product_sold_price`**
 # MAGIC   * The two ingest fields: **`ingest_file_name`** and **`ingested_at`**
-# MAGIC * Convert varoius columns from their string representation to the specified type:
+# MAGIC * Convert various columns from their string representation to the specified type:
 # MAGIC   * The column **`product_quantity`** should be represented as an **`Integer`**
 # MAGIC   * The column **`product_sold_price`** should be represented as an **`Decimal`** with two decimal places as in **`decimal(10,2)`**
-# MAGIC * Load the dataset to the [managed] delta table **`line_items`** (identified by the variable **`line_items_table`**)
+# MAGIC * Load the dataset to the managed delta table **`line_items`** (identified by the variable **`line_items_table`**)
 # MAGIC 
 # MAGIC **Additional Requirements:**
 # MAGIC * The schema for the **`line_items`** table must be:
@@ -281,19 +277,18 @@ reality_check_03_D()
 # COMMAND ----------
 
 # MAGIC %md ### Reality Check #3.E
-# MAGIC Run the following command to ensure that you are on track:<br/>
-# MAGIC (a full assessment will be made at the end of this exercise)
+# MAGIC Run the following command to ensure that you are on track:
 
 # COMMAND ----------
 
-reality_check_03_E()
+reality_check_03_e()
 
 # COMMAND ----------
 
-# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #3 - Final Assessments</h2>
+# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #3 - Final Check</h2>
 # MAGIC 
 # MAGIC Run the following command to make sure this exercise is complete:
 
 # COMMAND ----------
 
-full_assessment_03()
+reality_check_03_final()

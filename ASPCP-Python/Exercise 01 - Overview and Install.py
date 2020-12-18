@@ -7,7 +7,7 @@
 
 # COMMAND ----------
 
-# MAGIC %md # Exercise #0 - Project Overview
+# MAGIC %md # Exercise #1 - Project Overview & Dataset Install
 # MAGIC 
 # MAGIC The capstone project aims to assess rudimentary skills as it relates to the Apache Spark and DataFrame APIs.
 # MAGIC 
@@ -19,11 +19,21 @@
 # MAGIC * **`DataFrameWriter`**
 # MAGIC * The various functions found in the module **`pyspark.sql.functions`**
 # MAGIC 
-# MAGIC Throughout this project, you will be given specific instructions and it is our expectation that you will be able to complete these instructions drawing on your existing knowledge as well as other sources such as the Spark API Documentation.
+# MAGIC Throughout this project, you will be given specific instructions and it is our expectation that you will be able to complete these instructions drawing on your existing knowledge as well as other sources such as the <a href="https://spark.apache.org/docs/latest/api.html" target="_blank">Spark API Documentation</a>.
+# MAGIC 
+# MAGIC After reviewing the project, the datasets and the various exercises, we will install the<br/>
+# MAGIC datasets into your Databricks workspace so that you may proceed with this capstone project.
 
 # COMMAND ----------
 
-# MAGIC %md ## The Project
+# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Project Overview</h2>
+# MAGIC * The Project - an introduction to this project
+# MAGIC * The Data - an introduction to this project's datasets
+# MAGIC * The Exercises - an overview of the various exercises in this project
+
+# COMMAND ----------
+
+# MAGIC %md ### The Project
 # MAGIC 
 # MAGIC The idea behind this project is to ingest data from a purchasing system and load it into a data lake for further analysis. 
 # MAGIC 
@@ -37,7 +47,7 @@
 
 # COMMAND ----------
 
-# MAGIC %md ## The Data
+# MAGIC %md ### The Data
 # MAGIC The raw data comes in three forms:
 # MAGIC 
 # MAGIC 1. Orders that were processed in 2017, 2018 and 2019.
@@ -62,9 +72,9 @@
 
 # COMMAND ----------
 
-# MAGIC %md ## The Exercises
+# MAGIC %md ### The Exercises
 # MAGIC 
-# MAGIC * In **Exercise #1**, we will "install" a copy of the datasets into your Databricks workspace.
+# MAGIC * In **Exercise #1**, (this notebook) we will "install" a copy of the datasets into your Databricks workspace.
 # MAGIC 
 # MAGIC * In **Exercise #2**, we will ingest the batch data for 2017-2019, combine them into a single dataset for future processing.
 # MAGIC 
@@ -75,3 +85,67 @@
 # MAGIC * In **Exercise #5**, we will begin processing the stream of orders for 2020, appending that stream of data to the existing datasets as necessary.
 # MAGIC 
 # MAGIC * In **Exercise #6**, we will use all of our new datasets to answer a handful of business questions.
+
+# COMMAND ----------
+
+# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #1 - Install Datasets</h2>
+# MAGIC 
+# MAGIC The datasets for this project are stored in a public object store.
+# MAGIC 
+# MAGIC They need to be downloaded and installed into your Databricks workspace before proceeding with this project.
+# MAGIC 
+# MAGIC **In this step you will need to:**
+# MAGIC 1. Attach this notebook to a cluster
+# MAGIC 2. Specify your Registration ID
+# MAGIC 3. Run the setup notebook for this exercise
+# MAGIC 4. Install the datasets
+# MAGIC 5. Run the reality check to verify the datasets were correctly installed
+# MAGIC 
+# MAGIC Note: These steps represent the basic pattern used by each exercise in this capstone project
+
+# COMMAND ----------
+
+# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Setup Exercise #1</h2>
+# MAGIC 
+# MAGIC To get started, we first need to configure your Registration ID and then run the setup notebook.
+
+# COMMAND ----------
+
+# MAGIC %md ### Setup - Registration ID
+# MAGIC 
+# MAGIC In the next commmand, please update the variable **`registration_id`** with the Registration ID you received when you signed up for this project.
+# MAGIC 
+# MAGIC For more information, see [Registration ID]($./Registration ID)
+
+# COMMAND ----------
+
+registration_id = "FILL_IN"
+
+# COMMAND ----------
+
+# MAGIC %md ### Setup - Run the exercise setup
+# MAGIC 
+# MAGIC Run the following cell to setup this exercise, declaring exercise-specific variables and functions.
+
+# COMMAND ----------
+
+# MAGIC %run ./_includes/Setup-Exercise-01
+
+# COMMAND ----------
+
+# MAGIC %md <h2><img src="https://files.training.databricks.com/images/105/logo_spark_tiny.png"> Exercise #1 - Install Datasets</h2>
+# MAGIC 
+# MAGIC Simply run the following command to install the capstone's datasets into your workspace.
+
+# COMMAND ----------
+
+install_datasets()
+
+# COMMAND ----------
+
+# MAGIC %md ### Reality Check #1
+# MAGIC Run the following command to ensure that you are on track:
+
+# COMMAND ----------
+
+reality_check_install()
