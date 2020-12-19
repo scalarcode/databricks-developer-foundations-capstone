@@ -44,7 +44,7 @@ https://github.com/databricks-academy/Apache-Spark-Programming-Capstone.git
 6. Select **Clone from Git repo** (should be selected by default)
 7. In the **Git repo URL** field, paste the URL you copied in step #1 above
 8. Select **Create** - after a few seconds, the project should be fully imported
-9. Open the notebook, **Exercise 00 - Overview**.
+9. Open the notebook, **Exercise 01 - Overview and Install**.
 
 ### Import DBC file
 1. In GitHub, select the **Releases** tab<br/>
@@ -61,5 +61,5 @@ https://github.com/databricks-academy/Apache-Spark-Programming-Capstone/releases
 9. Open the notebook, **Exercise 00 - Overview**.
 
 ### Completing the Capstone Project
-1. Start with notebook **Exercise 00 - Overview** which provides an overview and context for the project.
+1. Start with notebook **Exercise 01 - Overview and Install** which provides an overview and context for the project.
 2. From there, work your way through each notebook (1-6)
