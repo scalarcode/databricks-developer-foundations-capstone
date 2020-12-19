@@ -36,7 +36,7 @@ Once imported, (either via DBC or Databricks Projects), open the notebook **Exer
 ### Import via Databricks Projects
 Note: At the time of writing this, Databricks Projects is in private preview and is not yet available to everyone. If you do not yet have access to this feature, please use the alternative method which is to import the DBC file (see next section)
 1. Copy the git URL for this repo (use the HTTPS form)<br/>
-https://github.com/databricks-academy/INT-ASPCP-v1.git
+https://github.com/databricks-academy/Apache-Spark-Programming-Capstone.git
 2. Sign into your Databricks workspace
 3. In the left-hand navigation panel, select the **Projects** icon
 4. In the projects folder, select the folder that corresponds to your username/email address
@@ -48,7 +48,7 @@ https://github.com/databricks-academy/INT-ASPCP-v1.git
 
 ### Import DBC file
 1. In GitHub, select the **Releases** tab<br/>
-https://github.com/databricks-academy/INT-ASPCP-v1/releases
+https://github.com/databricks-academy/Apache-Spark-Programming-Capstone/releases
 2. Select the most recent release by clicking on the release title
 3. Download the DBC file, **ASPCP-Python.dbc** - remember where you save this file to, you will need it in a few steps
 4. Sign into your Databricks workspace
