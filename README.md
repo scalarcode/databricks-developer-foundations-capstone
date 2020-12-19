@@ -58,7 +58,7 @@ https://github.com/databricks-academy/Apache-Spark-Programming-Capstone/releases
 8. Select the option to **Import**
 9. Select **browse** and select the DBC file that you saved to your machine in step #3 above.
 10. Select **Import** - after a few seconds, the project should be fully imported
-9. Open the notebook, **Exercise 00 - Overview**.
+9. Open the notebook, **Exercise 01 - Overview and Install**.
 
 ### Completing the Capstone Project
 1. Start with notebook **Exercise 01 - Overview and Install** which provides an overview and context for the project.
