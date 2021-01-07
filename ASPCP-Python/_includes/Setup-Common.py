@@ -411,7 +411,7 @@ username = getTag("user")
 
 # The course dataset_name is simply the
 # unique identifier for this project
-dataset_name = "apache-spark-programming-capstone"
+dataset_name = "developer-foundations-capstone"
 
 # The path to our user's working directory. This combines both the
 # username and dataset_name to create a "globally unique" folder
