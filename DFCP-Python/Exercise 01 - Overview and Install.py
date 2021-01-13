@@ -85,6 +85,8 @@
 # MAGIC * In **Exercise #5**, we will begin processing the stream of orders for 2020, appending that stream of data to the existing datasets as necessary.
 # MAGIC 
 # MAGIC * In **Exercise #6**, we will use all of our new datasets to answer a handful of business questions.
+# MAGIC 
+# MAGIC * In **Exercise #7**, we provide final instructions for submitting your capstone project.
 
 # COMMAND ----------
 
