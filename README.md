@@ -1,7 +1,7 @@
-# Apache Spark Programming Capstone
+# Developer-Foundations-Capstone
 
 ## Summary 
-This capstone project serves to validate a partner’s readiness for future classes such as the course Data Engineering with Databricks and Scalable Machine Learning on Databricks.
+This capstone project serves to validate an individual’s readiness for future classes such as the course Data Engineering with Databricks and Scalable Machine Learning on Databricks.
 
 ## Description
 The Apache Spark Programming Capstone helps students put into practice skills learned in its prerequisite course, Apache Spark Programming with Databricks. This capstone also serves to validate participants’ readiness for the next courses in this series of partners’ classes, Data Engineering with Databricks and Machine Learning on Databricks.
