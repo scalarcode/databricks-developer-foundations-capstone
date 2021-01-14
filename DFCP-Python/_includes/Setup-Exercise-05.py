@@ -88,8 +88,11 @@ def reality_check_05_a():
   
   suite_name = "ex.05.a"
   suite = TestSuite()
+
+  suite.test(f"{suite_name}.reg_id", f"Valid Registration ID", testFunction = lambda: validate_registration_id(registration_id))
+  reg_id_id = suite.lastTestId()
   
-  suite.test(f"{suite_name}.current-db", f"The current database is {user_db}",  
+  suite.test(f"{suite_name}.current-db", f"The current database is {user_db}",  dependsOn=reg_id_id,
              testFunction = lambda: spark.catalog.currentDatabase() == user_db)
 
   suite.test(f"{suite_name}.o-total", f"Expected {meta_orders_count:,d} orders", dependsOn=[suite.lastTestId()],

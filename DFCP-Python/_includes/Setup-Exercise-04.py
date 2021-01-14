@@ -75,7 +75,10 @@ def reality_check_04_a():
   suite_name = "ex.04.a"
   suite = TestSuite()
   
-  suite.test(f"{suite_name}.current-db", f"The current database is {user_db}",  
+  suite.test(f"{suite_name}.reg_id", f"Valid Registration ID", testFunction = lambda: validate_registration_id(registration_id))
+  reg_id_id = suite.lastTestId()
+
+  suite.test(f"{suite_name}.current-db", f"The current database is {user_db}",  dependsOn=reg_id_id,
              testFunction = lambda: spark.catalog.currentDatabase() == user_db)
 
   daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")

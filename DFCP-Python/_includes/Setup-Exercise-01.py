@@ -39,29 +39,32 @@ def reality_check_install():
   suite_name = "install"
   suite = TestSuite()
   
+  suite.test(f"{suite_name}.reg_id", f"Valid Registration ID", testFunction = lambda: validate_registration_id(registration_id))
+  reg_id_id = suite.lastTestId()
+  
   test_1_count = len(dbutils.fs.ls(raw_data_dir+"/"))
-  suite.testEquals(f"{suite_name}.root", f"Expected 3 files, found {test_1_count} in /", 3, test_1_count)
+  suite.testEquals(f"{suite_name}.root", f"Expected 3 files, found {test_1_count} in /", 3, test_1_count, dependsOn=reg_id_id)
   test_1_id = suite.lastTestId()
   
   test_2_count = len(dbutils.fs.ls(raw_data_dir+"/_meta"))
-  suite.testEquals(f"{suite_name}.meta", f"Expected 1 files, found {test_2_count} in /_meta", 1, test_2_count)
+  suite.testEquals(f"{suite_name}.meta", f"Expected 1 files, found {test_2_count} in /_meta", 1, test_2_count, dependsOn=reg_id_id)
   test_2_id = suite.lastTestId()
   
   test_3_count = len(dbutils.fs.ls(raw_data_dir+"/products"))
-  suite.testEquals(f"{suite_name}.products", f"Expected 2 files, found {test_3_count} in /products", 2, test_3_count)
+  suite.testEquals(f"{suite_name}.products", f"Expected 2 files, found {test_3_count} in /products", 2, test_3_count, dependsOn=reg_id_id)
   test_3_id = suite.lastTestId()
   
   test_4_count = len(dbutils.fs.ls(raw_data_dir+"/orders"))
-  suite.testEquals(f"{suite_name}.orders", f"Expected 2 files, found {test_4_count} in /orders", 2, test_4_count)
+  suite.testEquals(f"{suite_name}.orders", f"Expected 2 files, found {test_4_count} in /orders", 2, test_4_count, dependsOn=reg_id_id)
   test_4_id = suite.lastTestId()
   
   test_5_count = len(dbutils.fs.ls(raw_data_dir+"/orders/batch"))
-  suite.testEquals(f"{suite_name}.orders-batch", f"Expected 3 files, found {test_5_count} in /orders/batch", 3, test_5_count)
+  suite.testEquals(f"{suite_name}.orders-batch", f"Expected 3 files, found {test_5_count} in /orders/batch", 3, test_5_count, dependsOn=reg_id_id)
   test_5_id = suite.lastTestId()
   
   test_6_count = len(dbutils.fs.ls(raw_data_dir+"/orders/stream"))
   stream_count = spark.read.option("inferSchema", True).json(f"{raw_data_dir}/_meta/meta.json").first()["streamCount"]
-  suite.testEquals(f"{suite_name}.orders-stream", f"Expected {stream_count} files, found {test_6_count} in /orders/stream", stream_count, test_6_count)
+  suite.testEquals(f"{suite_name}.orders-stream", f"Expected {stream_count} files, found {test_6_count} in /orders/stream", stream_count, test_6_count, dependsOn=reg_id_id)
   test_6_id = suite.lastTestId()
 
   previous_ids = [test_1_id, test_2_id, test_3_id, test_4_id, test_5_id, test_6_id]

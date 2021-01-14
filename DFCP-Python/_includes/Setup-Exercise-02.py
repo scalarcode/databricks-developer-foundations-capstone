@@ -145,7 +145,10 @@ def reality_check_02_a():
   suite_name = "ex.02.a"
   suite = TestSuite()
   
-  suite.test(f"{suite_name}.exists", "Target directory exists",  
+  suite.test(f"{suite_name}.reg_id", f"Valid Registration ID", testFunction = lambda: validate_registration_id(registration_id))
+  reg_id_id = suite.lastTestId()
+
+  suite.test(f"{suite_name}.exists", "Target directory exists", dependsOn=reg_id_id, 
              testFunction = lambda: len(list(filter(lambda f: f.path.endswith("/"), dbutils.fs.ls( batch_target_path)))) > 0)
   
   suite.test(f"{suite_name}.is_delta", "Using the Delta file format", dependsOn=[suite.lastTestId()],

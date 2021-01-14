@@ -99,6 +99,9 @@ def checkSchema(schemaA, schemaB, keepOrder=True, keepNullable=False):
     else:
       return set(schA) == set(schB)
 
+def validate_registration_id(registration_id):
+  return registration_id is not None and int(registration_id) > 0
+    
 None # Suppress output
 
 # COMMAND ----------
@@ -170,12 +173,12 @@ class TestCase(object):
                escapeHTML:bool=False,
                points:int=1):
     
+    self.id=id
+    self.points=points
+    self.escapeHTML=escapeHTML
     self.description=description
     self.testFunction=testFunction
-    self.id=id
-    self.dependsOn=dependsOn
-    self.escapeHTML=escapeHTML
-    self.points=points
+    self.dependsOn = dependsOn if type(dependsOn) == list else [dependsOn]
 
 # Test result
 class TestResult(object):
@@ -253,7 +256,7 @@ class TestSuite(object):
     import re
     failedTests = set()
     testResults = list()
-
+    
     for test in self.testCases:
       skip = any(testId in failedTests for testId in test.dependsOn)
       result = TestResult(test, skip, debug)
