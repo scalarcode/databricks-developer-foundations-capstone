@@ -62,14 +62,14 @@ def no_white_space():
   return True
 
 def no_empty_strings():
-  from pyspark.sql.functions import col, trim, ltrim
+  from pyspark.sql.functions import col, trim, ltrim, lit
   for column in string_columns:
     if 0 != spark.read.format("delta").load(batch_target_path).filter(trim(col(column)) == lit("")).count():
       return False
   return True
 
 def no_null_strings():
-  from pyspark.sql.functions import col, trim, ltrim
+  from pyspark.sql.functions import col, trim, ltrim, lit
   for column in string_columns:
     if 0 != spark.read.format("delta").load(batch_target_path).filter(trim(col(column)) == lit("null")).count():
       return False
