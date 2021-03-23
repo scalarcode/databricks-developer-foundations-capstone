@@ -140,12 +140,18 @@ check_final_passed = False
 # COMMAND ----------
 
 def reality_check_02_a():
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
+  
   global check_a_passed
   
   suite_name = "ex.02.a"
   suite = TestSuite()
   
-  suite.test(f"{suite_name}.reg_id", f"Valid Registration ID", testFunction = lambda: validate_registration_id(registration_id))
+  suite.test(f"{suite_name}.cluster", f"Using DBR 7.3 LTS", testFunction = validate_cluster)
+  cluster_id = suite.lastTestId()
+  
+  suite.test(f"{suite_name}.reg_id", f"Valid Registration ID", testFunction = lambda: validate_registration_id(registration_id), dependsOn=cluster_id)
   reg_id_id = suite.lastTestId()
 
   suite.test(f"{suite_name}.exists", "Target directory exists", dependsOn=reg_id_id, 
@@ -163,14 +169,23 @@ def reality_check_02_a():
   suite.test(f"{suite_name}.count", f"Expected {meta_batch_count_2017:,d} records", dependsOn=[suite.lastTestId()],
              testFunction = lambda: spark.read.format("delta").load(batch_target_path).count() == meta_batch_count_2017)
 
-  suite.test(f"{suite_name}.white-space", "No whitespace in column values, need to trim whitespace", testFunction=no_white_space, dependsOn=[suite.lastTestId()])
-  suite.test(f"{suite_name}.empty-strings", "No empty strings in column values, should be null literals", testFunction=no_empty_strings, dependsOn=[suite.lastTestId()])
-  suite.test(f"{suite_name}.null-strings", "No null strings, should be null literals", testFunction=no_null_strings, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.white-space", "No leading or trailing whitespace in column values, need to trim", testFunction=no_white_space, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.empty-strings", "No empty strings in column values, should be the SQL value null", testFunction=no_empty_strings, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.null-strings", "No \"null\" strings for column values, should be the SQL value null", testFunction=no_null_strings, dependsOn=[suite.lastTestId()])
+  
   suite.test(f"{suite_name}.ingest-file", "Ingest file names are valid for 2017", testFunction=valid_ingest_file_name_2017, dependsOn=[suite.lastTestId()])
   suite.test(f"{suite_name}.ingest-date", "Ingest date is valid for 2017", testFunction=valid_ingest_date_2017, dependsOn=[suite.lastTestId()])
   suite.test(f"{suite_name}.values", "Key columns are the correct length (properly parsed)", testFunction=valid_values, dependsOn=[suite.lastTestId()])
   
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
   check_a_passed = suite.passed
   suite.displayResults()
@@ -178,6 +193,9 @@ def reality_check_02_a():
 # COMMAND ----------
 
 def reality_check_02_b():
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
+  
   global check_b_passed
 
   suite_name = "ex.02.b"
@@ -185,7 +203,7 @@ def reality_check_02_b():
   
   suite.test(f"{suite_name}.exists", "Target directory exists",  
              testFunction = lambda: len(list(filter(lambda f: f.path.endswith("/"), dbutils.fs.ls( batch_target_path)))) > 0)
-  
+
   suite.test(f"{suite_name}.is_delta", "Using the Delta file format", dependsOn=[suite.lastTestId()],
              testFunction = lambda: len(list(filter(lambda f: f.path.endswith("/_delta_log/"), dbutils.fs.ls( batch_target_path)))) == 1)
   
@@ -198,15 +216,23 @@ def reality_check_02_b():
   suite.test(f"{suite_name}.count", f"Expected {meta_batch_count_2017+meta_batch_count_2018:,d} records", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: spark.read.format("delta").load(batch_target_path).count() == meta_batch_count_2017+meta_batch_count_2018)
   
-  suite.test(f"{suite_name}.white-space", "No whitespace in column values, need to trim whitespace", testFunction=no_white_space, dependsOn=[suite.lastTestId()])
-  suite.test(f"{suite_name}.empty-strings", "No empty strings in column values, should be null literals", testFunction=no_empty_strings, dependsOn=[suite.lastTestId()])
-  suite.test(f"{suite_name}.null-strings", "No null strings, should be null literals", testFunction=no_null_strings, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.white-space", "No leading or trailing whitespace in column values, need to trim", testFunction=no_white_space, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.empty-strings", "No empty strings in column values, should be the SQL value null", testFunction=no_empty_strings, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.null-strings", "No \"null\" strings for column values, should be the SQL value null", testFunction=no_null_strings, dependsOn=[suite.lastTestId()])
+  
   suite.test(f"{suite_name}.ingest-file", "Ingest file names are valid for 2018", testFunction=valid_ingest_file_name_2018, dependsOn=[suite.lastTestId()])
   suite.test(f"{suite_name}.ingest-date", "Ingest date is valid for 2018", testFunction=valid_ingest_date_2018, dependsOn=[suite.lastTestId()])
   suite.test(f"{suite_name}.values", "Key columns are the correct length (properly parsed)", testFunction=valid_values, dependsOn=[suite.lastTestId()])
 
-
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
   check_b_passed = suite.passed
   suite.displayResults()
@@ -214,6 +240,9 @@ def reality_check_02_b():
 # COMMAND ----------
 
 def reality_check_02_c():
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
+  
   global check_c_passed
 
   suite_name = "ex.02.c"
@@ -234,14 +263,23 @@ def reality_check_02_c():
   suite.test(f"{suite_name}.count", f"Expected {meta_batch_count_2017+meta_batch_count_2018+meta_batch_count_2019:,d} records", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: spark.read.format("delta").load(batch_target_path).count() == meta_batch_count_2017+meta_batch_count_2018+meta_batch_count_2019)
 
-  suite.test(f"{suite_name}.white-space", "No whitespace in column values, need to trim whitespace", testFunction=no_white_space, dependsOn=[suite.lastTestId()])
-  suite.test(f"{suite_name}.empty-strings", "No empty strings in column values, should be null literals", testFunction=no_empty_strings, dependsOn=[suite.lastTestId()])
-  suite.test(f"{suite_name}.null-strings", "No null strings, should be null literals", testFunction=no_null_strings, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.white-space", "No leading or trailing whitespace in column values, need to trim", testFunction=no_white_space, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.empty-strings", "No empty strings in column values, should be the SQL value null", testFunction=no_empty_strings, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.null-strings", "No \"null\" strings for column values, should be the SQL value null", testFunction=no_null_strings, dependsOn=[suite.lastTestId()])
+  
   suite.test(f"{suite_name}.ingest-file", "Ingest file names are valid for 2019", testFunction=valid_ingest_file_name_2019, dependsOn=[suite.lastTestId()])
   suite.test(f"{suite_name}.ingest-date", "Ingest date is valid for 2019", testFunction=valid_ingest_date_2019, dependsOn=[suite.lastTestId()])
   suite.test(f"{suite_name}.values", "Key columns are the correct length (properly parsed)", testFunction=valid_values, dependsOn=[suite.lastTestId()])
 
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
   check_c_passed = suite.passed
   suite.displayResults()
@@ -249,8 +287,11 @@ def reality_check_02_c():
 # COMMAND ----------
 
 def reality_check_02_final():
-  global check_final_passed
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
   from pyspark.sql.functions import col, year, month, dayofmonth, from_unixtime
+
+  global check_final_passed
 
   suite_name = "ex.02.all"
   suite = TestSuite()
@@ -279,9 +320,9 @@ def reality_check_02_final():
   suite.test(f"{suite_name}.count", f"Expected {meta_batch_count_2017+meta_batch_count_2018+meta_batch_count_2019:,d} records", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: spark.read.format("delta").load(batch_target_path).count() == meta_batch_count_2017+meta_batch_count_2018+meta_batch_count_2019)
 
-  suite.test(f"{suite_name}.white-space", "No whitespace in column values, need to trim whitespace", testFunction=no_white_space, dependsOn=[suite.lastTestId()])
-  suite.test(f"{suite_name}.empty-strings", "No empty strings in column values, should be null literals", testFunction=no_empty_strings, dependsOn=[suite.lastTestId()])
-  suite.test(f"{suite_name}.null-strings", "No null strings, should be null literals", testFunction=no_null_strings, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.white-space", "No leading or trailing whitespace in column values, need to trim", testFunction=no_white_space, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.empty-strings", "No empty strings in column values, should be the SQL value null", testFunction=no_empty_strings, dependsOn=[suite.lastTestId()])
+  suite.test(f"{suite_name}.null-strings", "No \"null\" strings for column values, should be the SQL value null", testFunction=no_null_strings, dependsOn=[suite.lastTestId()])
 
   suite.test(f"{suite_name}.ingest-file-2017", "Ingest file names are valid for 2017", testFunction=valid_ingest_file_name_2017, dependsOn=[suite.lastTestId()])
   suite.test(f"{suite_name}.ingest-date-2017", "Ingest date is valid for 2017", testFunction=valid_ingest_date_2017, dependsOn=[suite.lastTestId()])
@@ -296,8 +337,24 @@ def reality_check_02_final():
     
   check_final_passed = suite.passed
     
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
-  daLogger.logEvent(f"ex.02.final", f"{{\"registration_id\": {registration_id}, \"passed\": {TestResultsAggregator.passed}, \"percentage\": {TestResultsAggregator.percentage}, \"actPoints\": {TestResultsAggregator.score}, \"maxPoints\":   {TestResultsAggregator.maxScore}}}")
-  
+  daLogger.logEvent(f"Lesson.final", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Aggregated-{getLessonName()}", 
+    "description": "Aggregated results for lesson",
+    "status": "{"passed" if TestResultsAggregator.passed else "failed"}",
+    "actPoints": "{TestResultsAggregator.score}", 
+    "maxPoints":   "{TestResultsAggregator.maxScore}",
+    "percentage": "{TestResultsAggregator.percentage}"
+  }}""")
+ 
   suite.displayResults()

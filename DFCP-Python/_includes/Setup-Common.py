@@ -99,8 +99,18 @@ def checkSchema(schemaA, schemaB, keepOrder=True, keepNullable=False):
     else:
       return set(schA) == set(schB)
 
+def validate_cluster():
+  current_version = getTag("sparkVersion")
+  if not current_version:
+    raise Exception("The current DBR is not yet available to this notebook. Give it a second and try again!")
+  else:
+    return current_version == "7.3.x-scala2.12"
+    
 def validate_registration_id(registration_id):
-  return registration_id is not None and int(registration_id) > 0
+  try: 
+    return int(registration_id) > 0
+  except: 
+    return False
     
 None # Suppress output
 
@@ -117,11 +127,9 @@ class DatabricksAcademyLogger:
     
     try:
       content = {
-        "tags":       dict(map(lambda x: (x[0], str(x[1])), getTags().items())),
-        "moduleName": dataset_name,
+        "moduleName": "developer-foundations-capstone-v2",
         "lessonName": getLessonName(),
         "orgId":      getTag("orgId", "unknown"),
-        "username":   getTag("user", "unknown"),
         "eventId":    eventId,
         "eventTime":  f"{int(__builtin__.round((time.time() * 1000)))}",
         "language":   getTag("notebookLanguage", "unknown"),
@@ -182,14 +190,13 @@ class TestCase(object):
 
 # Test result
 class TestResult(object):
-  __slots__ = ('test', 'skipped', 'debug', 'passed', 'status', 'points', 'exception', 'message')
-  def __init__(self, test, skipped = False, debug = False):
+  __slots__ = ('test', 'skipped', 'passed', 'status', 'points', 'exception', 'message')
+  def __init__(self, test, skipped = False):
     try:
       self.test = test
       self.skipped = skipped
-      self.debug = debug
       if skipped:
-        self.status = 'skipped'
+        self.status = "skipped"
         self.passed = False
         self.points = 0
       else:
@@ -205,7 +212,7 @@ class TestResult(object):
       self.points = 0
       self.exception = e
       self.message = repr(self.exception)
-      if (debug and not isinstance(e, AssertionError)):
+      if (not isinstance(e, AssertionError)):
         raise e
 
 # Decorator to lazy evaluate - used by TestSuite
@@ -252,14 +259,14 @@ class TestSuite(object):
   def testResults(self) -> List[TestResult]:
     return self.runTests()
   
-  def runTests(self, debug=False) -> List[TestResult]:
+  def runTests(self) -> List[TestResult]:
     import re
     failedTests = set()
     testResults = list()
     
     for test in self.testCases:
       skip = any(testId in failedTests for testId in test.dependsOn)
-      result = TestResult(test, skip, debug)
+      result = TestResult(test, skip)
 
       if (not result.passed and test.id != None):
         failedTests.add(test.id)
@@ -268,7 +275,17 @@ class TestSuite(object):
       elif result.test.description: eventId = "Test-"+re.sub("[^a-zA-Z0-9_]", "", result.test.description).upper()
       else: eventId = "Test-"+str(uuid.uuid1())
 
-      message = f"{{\"registration_id\": {registration_id}, \"testId\": \"{eventId}\", \"description\": \"{result.test.description}\", \"status\": \"{result.status}\", \"actPoints\": {result.points}, \"maxPoints\": {result.test.points}}}"
+      description = result.test.description.replace("\"", "'")
+        
+      message = f"""{{
+        "registrationId": "{registration_id}", 
+        "testId": "{eventId}", 
+        "description": "{description}", 
+        "status": "{result.status}", 
+        "actPoints": "{result.points}", 
+        "maxPoints": "{result.test.points}",
+        "percentage": "{TestResultsAggregator.percentage}"
+      }}"""
 
       daLogger.logEvent(eventId, message)
 
@@ -277,14 +294,13 @@ class TestSuite(object):
     
     return testResults
 
-  def _display(self, cssClass:str="results", debug=False) -> None:
+  def _display(self, cssClass:str="results") -> None:
     from html import escape
-    testResults = self.testResults if not debug else self.runTests(debug=True)
     lines = []
     lines.append(testResultsStyle)
     lines.append("<table class='"+cssClass+"'>")
     lines.append("  <tr><th class='points'>Points</th><th class='test'>Test</th><th class='result'>Result</th></tr>")
-    for result in testResults:
+    for result in self.testResults:
       resultHTML = "<td class='result "+result.status+"'><span class='message'>"+result.message+"</span></td>"
       descriptionHTML = escape(str(result.test.description)) if (result.test.escapeHTML) else str(result.test.description)
       lines.append("  <tr><td class='points'>"+str(result.points)+"</td><td class='test'>"+descriptionHTML+"</td>"+resultHTML+"</tr>")
@@ -299,9 +315,6 @@ class TestSuite(object):
   def grade(self) -> int:
     self._display("grade")
     return self.score
-  
-  def debug(self) -> None:
-    self._display("grade", debug=True)
   
   @lazy_property
   def score(self) -> int:
@@ -374,19 +387,19 @@ class __TestResultsAggregator(object):
     self.testResults[result.test.id] = result
     return result
   
-  @lazy_property
+  @property
   def score(self) -> int:
     return __builtins__.sum(map(lambda result: result.points, self.testResults.values()))
   
-  @lazy_property
+  @property
   def maxScore(self) -> int:
     return __builtins__.sum(map(lambda result: result.test.points, self.testResults.values()))
 
-  @lazy_property
+  @property
   def percentage(self) -> int:
     return 0 if self.maxScore == 0 else int(100.0 * self.score / self.maxScore)
   
-  @lazy_property
+  @property
   def passed(self) -> bool:
     return self.percentage == 100
 
@@ -410,7 +423,7 @@ import re
 
 # The user's name (email address) will be used to create a home directory into which all datasets will
 # be written into so as to further isolating changes from other students running the same material.
-username = getTag("user")
+username = getTag("user").lower()
 
 # The course dataset_name is simply the
 # unique identifier for this project

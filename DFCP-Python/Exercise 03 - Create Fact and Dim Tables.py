@@ -68,6 +68,7 @@ registration_id = "FILL_IN"
 # MAGIC * Use the database identified by the variable **`user_db`** so that any tables created in this notebook are **NOT** added to the **`default`** database
 # MAGIC 
 # MAGIC **Special Notes**
+# MAGIC * Do not hard-code the database name - in some scenarios this will result in validation errors.
 # MAGIC * For assistence with the SQL command to create a database, see <a href="https://docs.databricks.com/spark/latest/spark-sql/language-manual/sql-ref-syntax-ddl-create-database.html" target="_blank">CREATE DATABASE</a> on the Databricks docs website.
 # MAGIC * For assistence with the SQL command to use a database, see <a href="https://docs.databricks.com/spark/latest/spark-sql/language-manual/sql-ref-syntax-ddl-usedb.html" target="_blank">USE DATABASE</a> on the Databricks docs website.
 
@@ -141,9 +142,9 @@ reality_check_03_b()
 # MAGIC   * The column **`sales_rep_ssn`** should be represented as a **`Long`** (Note: You will have to first clean the column by removing extreneous hyphens in some records)
 # MAGIC   * The column **`sales_rep_zip`** should be represented as an **`Integer`**
 # MAGIC * Remove the columns not directly related to the sales-rep record:
-# MAGIC   * Unrelated ID fields: **`submitted_at`**, **`order_id`**, **`customer_id`**
-# MAGIC   * Shipping address fields: **`shipping_address_attention`**, **`shipping_address_address`**, **`shipping_address_city`**, **`shipping_address_state`**, **`shipping_address_zip`**
-# MAGIC   * Product fields: **`product_id`**, **`product_quantity`**, **`product_sold_price`**
+# MAGIC   * Unrelated ID columns: **`submitted_at`**, **`order_id`**, **`customer_id`**
+# MAGIC   * Shipping address columns: **`shipping_address_attention`**, **`shipping_address_address`**, **`shipping_address_city`**, **`shipping_address_state`**, **`shipping_address_zip`**
+# MAGIC   * Product columns: **`product_id`**, **`product_quantity`**, **`product_sold_price`**
 # MAGIC * Because there is one record per product ordered (many products per order), not to mention one sales rep placing many orders (many orders per sales rep), there will be duplicate records for our sales reps. Remove all duplicate records, making sure to exclude **`ingest_file_name`** and **`ingested_at`** from the evaluation of duplicate records
 # MAGIC * Load the dataset to the managed delta table **`sales_rep_scd`** (identified by the variable **`sales_reps_table`**)
 # MAGIC 
@@ -195,8 +196,8 @@ reality_check_03_c()
 # MAGIC   * The column **`submitted_at`** is a "unix epoch" (number of seconds since 1970-01-01 00:00:00 UTC) and should be represented as a **`Timestamp`**
 # MAGIC   * The column **`shipping_address_zip`** should be represented as an **`Integer`**
 # MAGIC * Remove the columns not directly related to the order record:
-# MAGIC   * Sales reps fields: **`sales_rep_ssn`**, **`sales_rep_first_name`**, **`sales_rep_last_name`**, **`sales_rep_address`**, **`sales_rep_city`**, **`sales_rep_state`**, **`sales_rep_zip`**
-# MAGIC   * Product fields: **`product_id`**, **`product_quantity`**, **`product_sold_price`**
+# MAGIC   * Sales reps columns: **`sales_rep_ssn`**, **`sales_rep_first_name`**, **`sales_rep_last_name`**, **`sales_rep_address`**, **`sales_rep_city`**, **`sales_rep_state`**, **`sales_rep_zip`**
+# MAGIC   * Product columns: **`product_id`**, **`product_quantity`**, **`product_sold_price`**
 # MAGIC * Because there is one record per product ordered (many products per order), there will be duplicate records for each order. Remove all duplicate records, making sure to exclude **`ingest_file_name`** and **`ingested_at`** from the evaluation of duplicate records
 # MAGIC * Add the column **`submitted_yyyy_mm`** which is a **`string`** derived from **`submitted_at`** and is formatted as "**yyyy-MM**".
 # MAGIC * Load the dataset to the managed delta table **`orders`** (identified by the variable **`orders_table`**)
@@ -245,10 +246,10 @@ reality_check_03_d()
 # MAGIC 
 # MAGIC **In this step you will need to:**
 # MAGIC * Load the table **`batched_orders`** (identified by the variable **`batch_temp_view`**)
-# MAGIC * Retain the following fields (see schema below)
-# MAGIC   * The correlating ID fields: **`order_id`** and **`product_id`**
-# MAGIC   * The two product-specific fields: **`product_quantity`** and **`product_sold_price`**
-# MAGIC   * The two ingest fields: **`ingest_file_name`** and **`ingested_at`**
+# MAGIC * Retain the following columns (see schema below)
+# MAGIC   * The correlating ID columns: **`order_id`** and **`product_id`**
+# MAGIC   * The two product-specific columns: **`product_quantity`** and **`product_sold_price`**
+# MAGIC   * The two ingest columns: **`ingest_file_name`** and **`ingested_at`**
 # MAGIC * Convert various columns from their string representation to the specified type:
 # MAGIC   * The column **`product_quantity`** should be represented as an **`Integer`**
 # MAGIC   * The column **`product_sold_price`** should be represented as an **`Decimal`** with two decimal places as in **`decimal(10,2)`**

@@ -35,6 +35,8 @@ displayHTML(html)
 
 def wait_for_stream_start(name, max_count):
   import time
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
 
   timeout = 60
   while len(list(filter(lambda query: query.name == name, spark.streams.active))) == 0:
@@ -69,6 +71,9 @@ def wait_for_stream_start(name, max_count):
   return query
 
 def first_n_equal_one(name):
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
+
   query = list(filter(lambda query: query.name == name, spark.streams.active))[0]
   for i in range(0, meta_stream_count):
     if query.recentProgress[i]["numInputRows"] != 1:
@@ -84,12 +89,18 @@ check_final_passed = False
 # COMMAND ----------
 
 def reality_check_05_a():
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
+
   global check_a_passed
   
   suite_name = "ex.05.a"
   suite = TestSuite()
 
-  suite.test(f"{suite_name}.reg_id", f"Valid Registration ID", testFunction = lambda: validate_registration_id(registration_id))
+  suite.test(f"{suite_name}.cluster", f"Using DBR 7.3 LTS", testFunction = validate_cluster)
+  cluster_id = suite.lastTestId()
+  
+  suite.test(f"{suite_name}.reg_id", f"Valid Registration ID", testFunction = lambda: validate_registration_id(registration_id), dependsOn=cluster_id)
   reg_id_id = suite.lastTestId()
   
   suite.test(f"{suite_name}.current-db", f"The current database is {user_db}",  dependsOn=reg_id_id,
@@ -104,7 +115,15 @@ def reality_check_05_a():
   suite.test(f"{suite_name}.p-count", f"Expected {meta_products_count} products", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: spark.read.table(products_table).count() == meta_products_count)
 
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
   check_a_passed = suite.passed
   suite.displayResults()
@@ -112,6 +131,10 @@ def reality_check_05_a():
 # COMMAND ----------
 
 def reality_check_05_b():
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
+  from pyspark.sql import functions as FA
+
   global check_b_passed
   
   suite_name = "ex.05.b"
@@ -142,7 +165,15 @@ def reality_check_05_b():
     query = None
     suite.failPreReq(f"{suite_name}.prereq", e, [suite.lastTestId()])
   
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
   if query:
     print("Stopping the stream...")
@@ -154,6 +185,9 @@ def reality_check_05_b():
 # COMMAND ----------
 
 def reality_check_05_c():
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
+
   global check_c_passed
   
   suite_name = "ex.05.c"
@@ -177,7 +211,7 @@ def reality_check_05_c():
              testFunction = lambda: len(dbutils.fs.ls(f"{line_items_checkpoint_path}/metadata")) > 0)
 
     try:
-      new_count = spark.read.json(stream_path).select("orderId", explode("products")).count()
+      new_count = spark.read.json(stream_path).select("orderId", FA.explode("products")).count()
       expected_li_count = meta_line_items_count + new_count
       suite.test(f"{suite_name}.li_total", f"Expected {expected_li_count:,d} records, ({new_count} new)", 
                  dependsOn=[suite.lastTestId()], 
@@ -189,7 +223,15 @@ def reality_check_05_c():
     query = None
     suite.failPreReq(f"{suite_name}.prereq-b", e, [suite.lastTestId()])
   
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
   if query:
     print("Stopping the stream...")
@@ -201,8 +243,11 @@ def reality_check_05_c():
 # COMMAND ----------
 
 def reality_check_05_final():
-  global check_final_passed
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
   from pyspark.sql.functions import col
+  
+  global check_final_passed
   
   suite_name = "ex.05.all"
   suite = TestSuite()
@@ -221,7 +266,7 @@ def reality_check_05_final():
              testFunction = lambda: spark.read.table(orders_table).count() == meta_orders_count + meta_stream_count)
 
   try:
-    new_count = spark.read.json(stream_path).select("orderId", explode("products")).count()
+    new_count = spark.read.json(stream_path).select("orderId", FA.explode("products")).count()
     expected_li_count = meta_line_items_count + new_count
     suite.test(f"{suite_name}.li_total", f"Expected {expected_li_count:,d} records, ({new_count} new)",  
                      dependsOn = [suite.lastTestId()], 
@@ -238,8 +283,24 @@ def reality_check_05_final():
   
   check_final_passed = suite.passed
 
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
-  daLogger.logEvent(f"ex.02.final", f"{{\"registration_id\": {registration_id}, \"passed\": {TestResultsAggregator.passed}, \"percentage\": {TestResultsAggregator.percentage}, \"actPoints\": {TestResultsAggregator.score}, \"maxPoints\":   {TestResultsAggregator.maxScore}}}")
+  daLogger.logEvent(f"Lesson.final", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Aggregated-{getLessonName()}", 
+    "description": "Aggregated results for lesson",
+    "status": "{"passed" if TestResultsAggregator.passed else "failed"}",
+    "actPoints": "{TestResultsAggregator.score}", 
+    "maxPoints":   "{TestResultsAggregator.maxScore}",
+    "percentage": "{TestResultsAggregator.percentage}"
+  }}""")
   
   suite.displayResults()

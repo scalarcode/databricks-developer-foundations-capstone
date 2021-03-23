@@ -70,32 +70,54 @@ check_final_passed = False
 # COMMAND ----------
 
 def reality_check_04_a():
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
+
   global check_a_passed
   
   suite_name = "ex.04.a"
   suite = TestSuite()
   
-  suite.test(f"{suite_name}.reg_id", f"Valid Registration ID", testFunction = lambda: validate_registration_id(registration_id))
+  suite.test(f"{suite_name}.cluster", f"Using DBR 7.3 LTS", testFunction = validate_cluster)
+  cluster_id = suite.lastTestId()
+  
+  suite.test(f"{suite_name}.reg_id", f"Valid Registration ID", testFunction = lambda: validate_registration_id(registration_id), dependsOn=cluster_id)
   reg_id_id = suite.lastTestId()
 
   suite.test(f"{suite_name}.current-db", f"The current database is {user_db}",  dependsOn=reg_id_id,
              testFunction = lambda: spark.catalog.currentDatabase() == user_db)
 
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
   check_a_passed = suite.passed
   suite.displayResults()
 
 # COMMAND ----------
 
+def xml_installed():
+    try:
+      return spark.read.format("xml").option("rootTag", "products").option("rowTag", "product").load(products_xml_path).count() == meta_products_count+1
+    except:
+      return False
+
 def reality_check_04_b():
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
+
   global check_b_passed
   
   suite_name = "ex.04.b"
   suite = TestSuite()
   
-  suite.test(f"{suite_name}.spark-xml", f"Successfully installed the spark-xml library",
-         testFunction = lambda: spark.read.format("xml").option("rootTag", "products").option("rowTag", "product").load(products_xml_path).count() == meta_products_count+1)
+  suite.test(f"{suite_name}.spark-xml", f"Successfully installed the spark-xml library", testFunction = xml_installed)
   
   check_b_passed = suite.passed
   suite.displayResults()
@@ -103,8 +125,11 @@ def reality_check_04_b():
 # COMMAND ----------
 
 def reality_check_04_c():
-  global check_c_passed
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
   from pyspark.sql.functions import min, max
+
+  global check_c_passed
 
   suite_name = "ex.04.c"
   suite = TestSuite()
@@ -126,18 +151,26 @@ def reality_check_04_c():
             testFunction = lambda: spark.read.table(products_table).count() == meta_products_count)
 
   suite.test(f"{suite_name}.min-color_adj", f"Sample A of color_adj (valid values)", dependsOn=[suite.lastTestId()],
-             testFunction = lambda: spark.read.table(products_table).select(min(col("color_adj"))).first()[0] == 1.0)
+             testFunction = lambda: spark.read.table(products_table).select(FA.min(FA.col("color_adj"))).first()[0] == 1.0)
 
   suite.test(f"{suite_name}.max-color_adj", f"Sample B of color_adj (valid values)", dependsOn=[suite.lastTestId()],
-             testFunction = lambda: spark.read.table(products_table).select(max(col("color_adj"))).first()[0] == 1.1)
+             testFunction = lambda: spark.read.table(products_table).select(FA.max(FA.col("color_adj"))).first()[0] == 1.1)
 
   suite.test(f"{suite_name}.min-size_adj", f"Sample A of size_adj (valid values)", dependsOn=[suite.lastTestId()],
-             testFunction = lambda: spark.read.table(products_table).select(min(col("size_adj"))).first()[0] == 0.9)
+             testFunction = lambda: spark.read.table(products_table).select(FA.min(FA.col("size_adj"))).first()[0] == 0.9)
 
   suite.test(f"{suite_name}.max-size_adj", f"Sample B of size_adj (valid values)", dependsOn=[suite.lastTestId()],
-             testFunction = lambda: spark.read.table(products_table).select(max(col("size_adj"))).first()[0] == 1.0)
+             testFunction = lambda: spark.read.table(products_table).select(FA.max(FA.col("size_adj"))).first()[0] == 1.0)
 
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
   check_c_passed = suite.passed
   suite.displayResults()
@@ -145,8 +178,11 @@ def reality_check_04_c():
 # COMMAND ----------
 
 def reality_check_04_final():
-  global check_final_passed
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
   from pyspark.sql.functions import col
+
+  global check_final_passed
 
   suite_name = "ex.04.all"
   suite = TestSuite()
@@ -157,8 +193,24 @@ def reality_check_04_final():
 
   check_final_passed = suite.passed
 
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
-  daLogger.logEvent(f"ex.02.final", f"{{\"registration_id\": {registration_id}, \"passed\": {TestResultsAggregator.passed}, \"percentage\": {TestResultsAggregator.percentage}, \"actPoints\": {TestResultsAggregator.score}, \"maxPoints\":   {TestResultsAggregator.maxScore}}}")
+  daLogger.logEvent(f"Lesson.final", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Aggregated-{getLessonName()}", 
+    "description": "Aggregated results for lesson",
+    "status": "{"passed" if TestResultsAggregator.passed else "failed"}",
+    "actPoints": "{TestResultsAggregator.score}", 
+    "maxPoints":   "{TestResultsAggregator.maxScore}",
+    "percentage": "{TestResultsAggregator.percentage}"
+  }}""")
   
   suite.displayResults()

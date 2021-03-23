@@ -48,7 +48,10 @@ def reality_check_06_a():
   suite_name = "ex.06.a"
   suite = TestSuite()
   
-  suite.test(f"{suite_name}.reg_id", f"Valid Registration ID", testFunction = lambda: validate_registration_id(registration_id))
+  suite.test(f"{suite_name}.cluster", f"Using DBR 7.3 LTS", testFunction = validate_cluster)
+  cluster_id = suite.lastTestId()
+  
+  suite.test(f"{suite_name}.reg_id", f"Valid Registration ID", testFunction = lambda: validate_registration_id(registration_id), dependsOn=cluster_id)
   reg_id_id = suite.lastTestId()
 
   suite.test(f"{suite_name}.current-db", f"The current database is {user_db}",  dependsOn=reg_id_id,
@@ -69,7 +72,15 @@ def reality_check_06_a():
   suite.test(f"{suite_name}.sr-count", f"Expected {meta_sales_reps_count} sales reps", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: meta_sales_reps_count == spark.read.table(sales_reps_table).count())
 
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
   check_a_passed = suite.passed
   suite.displayResults()
@@ -77,6 +88,7 @@ def reality_check_06_a():
 # COMMAND ----------
 
 def reality_check_06_b():
+  from pyspark.sql.functions import col
   global check_b_passed
   
   suite_name = "ex.06.b"
@@ -120,7 +132,15 @@ def reality_check_06_b():
     suite.fail(f"{suite_name}.exception", dependsOn=[suite.lastTestId()],
                description=f"""Able to execute prerequisite query.<p style='max-width: 1024px; overflow-x:auto'>{e}</p>""")
     
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
   check_b_passed = suite.passed
   suite.displayResults()
@@ -128,7 +148,7 @@ def reality_check_06_b():
 # COMMAND ----------
 
 def reality_check_06_c(ex_avg, ex_min, ex_max):
-  from pyspark.sql.functions import avg, min, max
+  from pyspark.sql.functions import col, avg, min, max
   global check_c_passed
   
   suite_name = "ex.06.c"
@@ -172,7 +192,15 @@ def reality_check_06_c(ex_avg, ex_min, ex_max):
     suite.fail(f"{suite_name}.exception", dependsOn=[suite.lastTestId()],
                description=f"""Able to execute prerequisite query.<p style='max-width: 1024px; overflow-x:auto'>{e}</p>""")
 
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
   check_c_passed = suite.passed
   suite.displayResults()
@@ -181,6 +209,7 @@ def reality_check_06_c(ex_avg, ex_min, ex_max):
 
 def reality_check_06_d():
   global check_d_passed
+  from pyspark.sql.functions import col
   
   suite_name = "ex.06.d"
   suite = TestSuite()
@@ -219,7 +248,15 @@ def reality_check_06_d():
     suite.fail(f"{suite_name}.exception", dependsOn=[suite.lastTestId()],
                description=f"""Able to execute prerequisite query.<p style='max-width: 1024px; overflow-x:auto'>{e}</p>""")
 
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
   check_d_passed = suite.passed
   suite.displayResults()
@@ -240,8 +277,24 @@ def reality_check_06_final():
 
   check_final_passed = suite.passed
   
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
-  daLogger.logEvent(f"ex.02.final", f"{{\"registration_id\": {registration_id}, \"passed\": {TestResultsAggregator.passed}, \"percentage\": {TestResultsAggregator.percentage}, \"actPoints\": {TestResultsAggregator.score}, \"maxPoints\":   {TestResultsAggregator.maxScore}}}")
+  daLogger.logEvent(f"Lesson.final", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Aggregated-{getLessonName()}", 
+    "description": "Aggregated results for lesson",
+    "status": "{"passed" if TestResultsAggregator.passed else "failed"}",
+    "actPoints": "{TestResultsAggregator.score}", 
+    "maxPoints":   "{TestResultsAggregator.maxScore}",
+    "percentage": "{TestResultsAggregator.percentage}"
+  }}""")
   
   suite.displayResults()

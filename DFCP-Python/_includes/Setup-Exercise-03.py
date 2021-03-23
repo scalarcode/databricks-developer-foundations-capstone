@@ -92,18 +92,32 @@ check_final_passed = False
 # COMMAND ----------
 
 def reality_check_03_a():
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
+
   global check_a_passed
   
   suite_name = "ex.03.a"
   suite = TestSuite()
   
-  suite.test(f"{suite_name}.reg_id", f"Valid Registration ID", testFunction = lambda: validate_registration_id(registration_id))
+  suite.test(f"{suite_name}.cluster", f"Using DBR 7.3 LTS", testFunction = validate_cluster)
+  cluster_id = suite.lastTestId()
+  
+  suite.test(f"{suite_name}.reg_id", f"Valid Registration ID", testFunction = lambda: validate_registration_id(registration_id), dependsOn=cluster_id)
   reg_id_id = suite.lastTestId()
 
   suite.test(f"{suite_name}.current-db", f"The current database is {user_db}", dependsOn=reg_id_id,
              testFunction = lambda: spark.catalog.currentDatabase() == user_db)
 
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
   check_a_passed = suite.passed
   suite.displayResults()
@@ -111,16 +125,19 @@ def reality_check_03_a():
 # COMMAND ----------
 
 def reality_check_03_b():
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
+
   global check_b_passed
 
   suite_name = "ex.03.b"
   suite = TestSuite()
   
   suite.test(f"{suite_name}.table-exists", f"The table {batch_temp_view} exists",  
-             testFunction = lambda: len(list(filter(lambda t: t.name==batch_temp_view, spark.catalog.listTables(user_db)))) == 1)
+             testFunction = lambda: len(list(__builtin__.filter(lambda t: t.name==batch_temp_view, spark.catalog.listTables(user_db)))) == 1)
   
   suite.test(f"{suite_name}.is-temp-view", f"The table {batch_temp_view} is a temp view", dependsOn=[suite.lastTestId()],
-             testFunction = lambda: list(filter(lambda t: t.name==batch_temp_view, spark.catalog.listTables(user_db)))[0].tableType == "TEMPORARY")
+             testFunction = lambda: list(__builtin__.filter(lambda t: t.name==batch_temp_view, spark.catalog.listTables(user_db)))[0].tableType == "TEMPORARY")
   
   suite.test(f"{suite_name}.is-cached", f"The table {batch_temp_view} is cached", dependsOn=[suite.lastTestId()],
              testFunction = lambda: spark.catalog.isCached(batch_temp_view))
@@ -128,7 +145,15 @@ def reality_check_03_b():
   suite.test(f"{suite_name}.count", f"Expected {meta_batch_count_2017+meta_batch_count_2018+meta_batch_count_2019:,d} records", dependsOn=[suite.lastTestId()],
              testFunction = lambda:  spark.read.table(batch_temp_view).count() == meta_batch_count_2017+meta_batch_count_2018+meta_batch_count_2019)
   
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
   check_b_passed = suite.passed
   suite.displayResults()
@@ -136,16 +161,19 @@ def reality_check_03_b():
 # COMMAND ----------
 
 def reality_check_03_c():
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
+
   global check_c_passed
 
   suite_name = "ex.03.c"
   suite = TestSuite()
   
   suite.test(f"{suite_name}.table-exists", f"The table {sales_reps_table} exists",  
-             testFunction = lambda: len(list(filter(lambda t: t.name==sales_reps_table, spark.catalog.listTables(user_db)))) == 1)
+             testFunction = lambda: len(list(__builtin__.filter(lambda t: t.name==sales_reps_table, spark.catalog.listTables(user_db)))) == 1)
   
   suite.test(f"{suite_name}.is-managed", f"The table {sales_reps_table} is a managed table", dependsOn=[suite.lastTestId()],
-             testFunction = lambda: list(filter(lambda t: t.name==sales_reps_table, spark.catalog.listTables(user_db)))[0].tableType == "MANAGED")
+             testFunction = lambda: list(__builtin__.filter(lambda t: t.name==sales_reps_table, spark.catalog.listTables(user_db)))[0].tableType == "MANAGED")
 
   hive_path = f"dbfs:/user/hive/warehouse/{user_db}.db/{sales_reps_table}"
   suite.test(f"{suite_name}.is_delta", "Using the Delta file format", dependsOn=[suite.lastTestId()],
@@ -160,7 +188,15 @@ def reality_check_03_c():
   suite.test(f"{suite_name}.count-ssn-format", f"Expected _error_ssn_format record count to be {meta_ssn_format_count:,d}", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: spark.read.table(sales_reps_table).filter("_error_ssn_format == true").count() == meta_ssn_format_count)
 
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
   check_c_passed = suite.passed
   suite.displayResults()
@@ -168,6 +204,10 @@ def reality_check_03_c():
 # COMMAND ----------
 
 def reality_check_03_d():
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
+  from pyspark.sql.functions import col
+  
   global check_d_passed
 
   suite_name = "ex.03.d"
@@ -208,7 +248,15 @@ def reality_check_03_d():
   suite.test(f"{suite_name}.partitions", f"Found 36 partitions", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: __builtin__.len(list(filter(lambda p: p.endswith("_delta_log/") == False, map(lambda f: f.path, dbutils.fs.ls(hive_path))))) == 36)
   
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
   check_d_passed = suite.passed
   suite.displayResults()
@@ -216,6 +264,9 @@ def reality_check_03_d():
 # COMMAND ----------
 
 def reality_check_03_e():
+  # Restore candidate-shadowed builtins
+  from builtins import len, list, map, filter
+
   global check_e_passed
 
   suite_name = "ex.03.e"
@@ -237,7 +288,15 @@ def reality_check_03_e():
   suite.test(f"{suite_name}.count-total", f"Expected {meta_line_items_count:,d} records", dependsOn=[suite.lastTestId()],
              testFunction = lambda: spark.read.table(line_items_table).count() == meta_line_items_count)
 
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
   check_e_passed = suite.passed
   suite.displayResults()
@@ -245,8 +304,9 @@ def reality_check_03_e():
 # COMMAND ----------
 
 def reality_check_03_final():
-  global check_final_passed
   from pyspark.sql.functions import col
+
+  global check_final_passed
 
   suite_name = "ex.03.all"
   suite = TestSuite()
@@ -259,8 +319,24 @@ def reality_check_03_final():
     
   check_final_passed = suite.passed
   
-  daLogger.logEvent(f"{suite_name}", f"{{\"registration_id\": {registration_id}, \"passed\": {suite.passed}, \"percentage\": {suite.percentage}, \"actPoints\": {suite.score}, \"maxPoints\": {suite.maxScore}}}")
+  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Suite-{suite_name}", 
+    "description": "Suite level results",
+    "status": "{"passed" if suite.passed else "failed"}",
+    "actPoints": "{suite.score}", 
+    "maxPoints": "{suite.maxScore}",
+    "percentage": "{suite.percentage}"
+  }}""")
   
-  daLogger.logEvent(f"ex.02.final", f"{{\"registration_id\": {registration_id}, \"passed\": {TestResultsAggregator.passed}, \"percentage\": {TestResultsAggregator.percentage}, \"actPoints\": {TestResultsAggregator.score}, \"maxPoints\":   {TestResultsAggregator.maxScore}}}")
+  daLogger.logEvent(f"Lesson.final", f"""{{
+    "registrationId": "{registration_id}", 
+    "testId": "Aggregated-{getLessonName()}", 
+    "description": "Aggregated results for lesson",
+    "status": "{"passed" if TestResultsAggregator.passed else "failed"}",
+    "actPoints": "{TestResultsAggregator.score}", 
+    "maxPoints":   "{TestResultsAggregator.maxScore}",
+    "percentage": "{TestResultsAggregator.percentage}"
+  }}""")
   
   suite.displayResults()

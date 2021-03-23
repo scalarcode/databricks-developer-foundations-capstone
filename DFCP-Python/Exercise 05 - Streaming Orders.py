@@ -48,12 +48,10 @@
 # MAGIC Before attempting to ingest the data as a stream, we highly recomend that you start with a static **`DataFrame`** so that you can iron out the various kinks:
 # MAGIC * Renaming and flattening columns
 # MAGIC * Exploding the products array
-# MAGIC * Parsing the **`submittedAt`** field into a **`timestamp`**
+# MAGIC * Parsing the **`submittedAt`** column into a **`timestamp`**
 # MAGIC * Conforming to the **`orders`** and **`line_items`** schemas - because these are Delta tables, appending to them will fail if the schemas are not correct
 # MAGIC 
 # MAGIC Furthermore, creating a stream from JSON files will first require you to specify the schema - you can "cheat" and infer that schema from some of the JSON files before starting the stream.
-# MAGIC 
-# MAGIC One last note; you will be appending to a Delta table after which the final record count will be validated - should you restart the stream, you will inevitably append duplicate records to these tables forcing the validation to fail. You can address this issue by re-running **Exercise #3** which would presumably delete and/or overwrite the datasets, putting them back to their default state for this exercise.
 
 # COMMAND ----------
 
@@ -155,7 +153,11 @@ reality_check_05_a()
 # COMMAND ----------
 
 # MAGIC %md ### Reality Check #5.B
-# MAGIC Run the following command to ensure that you are on track:
+# MAGIC Run the following command to ensure that you are on track.
+# MAGIC 
+# MAGIC **Caution**: In the cell above, you will be appending to a Delta table and the final record count will be validated below. Should you restart the stream, you will inevitably append duplicate records to these tables forcing the validation to fail. There are two things you will need to address in this scenario:
+# MAGIC * Address the duplicate data issue by re-running **Exercise #3** which would presumably delete and/or overwrite the datasets, putting them back to their default state for this exercise.
+# MAGIC * Addrese the stream's state issue (remembering which files were processed) by deleting the directory identified by *`orders_checkpoint_path`*
 
 # COMMAND ----------
 

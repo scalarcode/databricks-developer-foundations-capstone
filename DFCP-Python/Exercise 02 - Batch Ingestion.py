@@ -21,7 +21,7 @@
 # MAGIC 
 # MAGIC Our only goal here is to unify all the datasets while tracking the source of each record (ingested file name and ingested timestamp) should additional problems arise.
 # MAGIC 
-# MAGIC Because we are only concerned with ingestion at this stage, the majority of the fields will be ingested as simple strings and in future exercises we will address this issue (and others) with various transformations.
+# MAGIC Because we are only concerned with ingestion at this stage, the majority of the columns will be ingested as simple strings and in future exercises we will address this issue (and others) with various transformations.
 # MAGIC 
 # MAGIC As you progress, several "reality checks" will be provided to you help ensure that you are on track - simply run the corresponding command after implementing the corresponding solution.
 # MAGIC 
@@ -196,8 +196,7 @@ reality_check_02_a()
 # MAGIC 5. **Append** the corresponding **`DataFrame`** to the previously created datasets specified by **`batch_target_path`**
 # MAGIC 
 # MAGIC **Additional Requirements**
-# MAGIC * Any "null" strings in the CSV file should be replace literal **`null`** values<br/>
-# MAGIC   HINT: This can be done with the **`DataFrameReader`**
+# MAGIC * Any **"null"** strings in the CSV file should be replaced with the SQL value **null**
 
 # COMMAND ----------
 
@@ -236,7 +235,7 @@ reality_check_02_b()
 # MAGIC    * Use transformations found in the **`DataFrame`** class to rename all columns in one operation
 # MAGIC 
 # MAGIC **Additional Requirements**
-# MAGIC * Any "null" strings in the CSV file should be replace literal **`null`** values
+# MAGIC * Any **"null"** strings in the CSV file should be replaced with the SQL value **null**<br/>
 
 # COMMAND ----------
 

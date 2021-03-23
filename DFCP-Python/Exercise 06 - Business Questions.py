@@ -208,8 +208,4 @@ reality_check_06_d()
 
 # COMMAND ----------
 
-check_d_passed
-
-# COMMAND ----------
-
 reality_check_06_final()
