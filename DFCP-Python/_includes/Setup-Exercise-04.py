@@ -84,7 +84,7 @@ def reality_check_04_a():
   suite.test(f"{suite_name}.reg_id", f"Valid Registration ID", testFunction = lambda: validate_registration_id(registration_id), dependsOn=cluster_id)
   reg_id_id = suite.lastTestId()
 
-  suite.test(f"{suite_name}.current-db", f"The current database is {user_db}",  dependsOn=reg_id_id,
+  suite.test(f"{suite_name}.current-db", f"The current database is {user_db}", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: spark.catalog.currentDatabase() == user_db)
 
   daLogger.logSuite(suite_name, registration_id, suite)
@@ -126,7 +126,10 @@ def reality_check_04_c():
   suite_name = "ex.04.c"
   suite = TestSuite()
   
-  suite.test(f"{suite_name}.table-exists", f"The table {products_table} exists",  
+  suite.test(f"{suite_name}.current-db", f"The current database is {user_db}", dependsOn=[suite.lastTestId()], 
+             testFunction = lambda: spark.catalog.currentDatabase() == user_db)
+
+  suite.test(f"{suite_name}.table-exists", f"The table {products_table} exists", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: len(list(filter(lambda t: t.name==products_table, spark.catalog.listTables(user_db)))) == 1)
   
   suite.test(f"{suite_name}.is-managed", f"The table {products_table} is a managed table", dependsOn=[suite.lastTestId()],

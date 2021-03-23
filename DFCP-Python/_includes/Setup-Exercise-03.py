@@ -104,9 +104,8 @@ def reality_check_03_a():
   cluster_id = suite.lastTestId()
   
   suite.test(f"{suite_name}.reg_id", f"Valid Registration ID", testFunction = lambda: validate_registration_id(registration_id), dependsOn=cluster_id)
-  reg_id_id = suite.lastTestId()
 
-  suite.test(f"{suite_name}.current-db", f"The current database is {user_db}", dependsOn=reg_id_id,
+  suite.test(f"{suite_name}.current-db", f"The current database is {user_db}", dependsOn=[suite.lastTestId()],
              testFunction = lambda: spark.catalog.currentDatabase() == user_db)
 
   daLogger.logSuite(suite_name, registration_id, suite)
@@ -125,7 +124,10 @@ def reality_check_03_b():
   suite_name = "ex.03.b"
   suite = TestSuite()
   
-  suite.test(f"{suite_name}.table-exists", f"The table {batch_temp_view} exists",  
+  suite.test(f"{suite_name}.current-db", f"The current database is {user_db}", dependsOn=[suite.lastTestId()], 
+             testFunction = lambda: spark.catalog.currentDatabase() == user_db)
+
+  suite.test(f"{suite_name}.table-exists", f"The table {batch_temp_view} exists", dependsOn=[suite.lastTestId()],
              testFunction = lambda: len(list(__builtin__.filter(lambda t: t.name==batch_temp_view, spark.catalog.listTables(user_db)))) == 1)
   
   suite.test(f"{suite_name}.is-temp-view", f"The table {batch_temp_view} is a temp view", dependsOn=[suite.lastTestId()],
@@ -147,23 +149,27 @@ def reality_check_03_b():
 def reality_check_03_c():
   # Restore candidate-shadowed builtins
   from builtins import len, list, map, filter
-
+  
   global check_c_passed
+
+  hive_path = f"dbfs:/user/hive/warehouse/{user_db}.db/{sales_reps_table}"
 
   suite_name = "ex.03.c"
   suite = TestSuite()
   
-  suite.test(f"{suite_name}.table-exists", f"The table {sales_reps_table} exists",  
-             testFunction = lambda: len(list(__builtin__.filter(lambda t: t.name==sales_reps_table, spark.catalog.listTables(user_db)))) == 1)
+  suite.test(f"{suite_name}.current-db", f"The current database is {user_db}", dependsOn=[suite.lastTestId()], 
+             testFunction = lambda: spark.catalog.currentDatabase() == user_db)
   
-  suite.test(f"{suite_name}.is-managed", f"The table {sales_reps_table} is a managed table", dependsOn=[suite.lastTestId()],
-             testFunction = lambda: list(__builtin__.filter(lambda t: t.name==sales_reps_table, spark.catalog.listTables(user_db)))[0].tableType == "MANAGED")
+  suite.test(f"{suite_name}.table-exists", f"The table {sales_reps_table} exists", dependsOn=[suite.lastTestId()], 
+             testFunction = lambda: len(list(filter(lambda t: t.name==sales_reps_table, spark.catalog.listTables(user_db)))) == 1)
+  
+  suite.test(f"{suite_name}.is-managed", f"The table {sales_reps_table} is a managed table", dependsOn=[suite.lastTestId()], 
+             testFunction = lambda: list(filter(lambda t: t.name==sales_reps_table, spark.catalog.listTables(user_db)))[0].tableType == "MANAGED")
 
-  hive_path = f"dbfs:/user/hive/warehouse/{user_db}.db/{sales_reps_table}"
-  suite.test(f"{suite_name}.is_delta", "Using the Delta file format", dependsOn=[suite.lastTestId()],
-           testFunction = lambda: len(list(filter(lambda f: f.path.endswith("/_delta_log/"), dbutils.fs.ls( hive_path)))) == 1)
+  suite.test(f"{suite_name}.is_delta", "Using the Delta file format", dependsOn=[suite.lastTestId()], 
+             testFunction = lambda: len(list(filter(lambda f: f.path.endswith("/_delta_log/"), dbutils.fs.ls( hive_path)))) == 1)
 
-  suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId()],
+  suite.test(f"{suite_name}.schema", "Schema is valid", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: checkSchema(spark.read.table(sales_reps_table).schema, expectedSalesRepSchema, False, False))
 
   suite.test(f"{suite_name}.count-total", f"Expected {meta_sales_reps_count:,d} records", dependsOn=[suite.lastTestId()],
@@ -189,7 +195,10 @@ def reality_check_03_d():
   suite_name = "ex.03.d"
   suite = TestSuite()
   
-  suite.test(f"{suite_name}.table-exists", f"The table {orders_table} exists",  
+  suite.test(f"{suite_name}.current-db", f"The current database is {user_db}", dependsOn=[suite.lastTestId()], 
+             testFunction = lambda: spark.catalog.currentDatabase() == user_db)
+  
+  suite.test(f"{suite_name}.table-exists", f"The table {orders_table} exists", dependsOn=[suite.lastTestId()],
              testFunction = lambda: len(list(filter(lambda t: t.name==orders_table, spark.catalog.listTables(user_db)))) == 1)
   
   suite.test(f"{suite_name}.is-managed", f"The table {orders_table} is a managed table", dependsOn=[suite.lastTestId()],
@@ -240,7 +249,10 @@ def reality_check_03_e():
   suite_name = "ex.03.e"
   suite = TestSuite()
   
-  suite.test(f"{suite_name}.table-exists", f"The table {line_items_table} exists",  
+  suite.test(f"{suite_name}.current-db", f"The current database is {user_db}", dependsOn=[suite.lastTestId()], 
+             testFunction = lambda: spark.catalog.currentDatabase() == user_db)
+
+  suite.test(f"{suite_name}.table-exists", f"The table {line_items_table} exists", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: len(list(filter(lambda t: t.name==line_items_table, spark.catalog.listTables(user_db)))) == 1)
   
   suite.test(f"{suite_name}.is-managed", f"The table {line_items_table} is a managed table", dependsOn=[suite.lastTestId()],

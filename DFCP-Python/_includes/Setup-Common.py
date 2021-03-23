@@ -234,8 +234,6 @@ class TestResult(object):
       self.points = 0
       self.exception = e
       self.message = repr(self.exception)
-      if (not isinstance(e, AssertionError)):
-        raise e
 
 # Decorator to lazy evaluate - used by TestSuite
 def lazy_property(fn):
