@@ -72,15 +72,7 @@ def reality_check_06_a():
   suite.test(f"{suite_name}.sr-count", f"Expected {meta_sales_reps_count} sales reps", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: meta_sales_reps_count == spark.read.table(sales_reps_table).count())
 
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
   check_a_passed = suite.passed
   suite.displayResults()
@@ -132,15 +124,7 @@ def reality_check_06_b():
     suite.fail(f"{suite_name}.exception", dependsOn=[suite.lastTestId()],
                description=f"""Able to execute prerequisite query.<p style='max-width: 1024px; overflow-x:auto'>{e}</p>""")
     
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
   check_b_passed = suite.passed
   suite.displayResults()
@@ -192,15 +176,7 @@ def reality_check_06_c(ex_avg, ex_min, ex_max):
     suite.fail(f"{suite_name}.exception", dependsOn=[suite.lastTestId()],
                description=f"""Able to execute prerequisite query.<p style='max-width: 1024px; overflow-x:auto'>{e}</p>""")
 
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
   check_c_passed = suite.passed
   suite.displayResults()
@@ -248,15 +224,7 @@ def reality_check_06_d():
     suite.fail(f"{suite_name}.exception", dependsOn=[suite.lastTestId()],
                description=f"""Able to execute prerequisite query.<p style='max-width: 1024px; overflow-x:auto'>{e}</p>""")
 
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
   check_d_passed = suite.passed
   suite.displayResults()
@@ -277,24 +245,8 @@ def reality_check_06_final():
 
   check_final_passed = suite.passed
   
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
-  daLogger.logEvent(f"Lesson.final", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Aggregated-{getLessonName()}", 
-    "description": "Aggregated results for lesson",
-    "status": "{"passed" if TestResultsAggregator.passed else "failed"}",
-    "actPoints": "{TestResultsAggregator.score}", 
-    "maxPoints":   "{TestResultsAggregator.maxScore}",
-    "percentage": "{TestResultsAggregator.percentage}"
-  }}""")
+  daLogger.logAggregatedResults(getLessonName(), registration_id, TestResultsAggregator)
   
   suite.displayResults()

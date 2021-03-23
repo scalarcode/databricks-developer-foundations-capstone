@@ -115,15 +115,7 @@ def reality_check_05_a():
   suite.test(f"{suite_name}.p-count", f"Expected {meta_products_count} products", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: spark.read.table(products_table).count() == meta_products_count)
 
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
   check_a_passed = suite.passed
   suite.displayResults()
@@ -165,15 +157,7 @@ def reality_check_05_b():
     query = None
     suite.failPreReq(f"{suite_name}.prereq", e, [suite.lastTestId()])
   
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
   if query:
     print("Stopping the stream...")
@@ -223,15 +207,7 @@ def reality_check_05_c():
     query = None
     suite.failPreReq(f"{suite_name}.prereq-b", e, [suite.lastTestId()])
   
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
   if query:
     print("Stopping the stream...")
@@ -283,24 +259,8 @@ def reality_check_05_final():
   
   check_final_passed = suite.passed
 
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
-  daLogger.logEvent(f"Lesson.final", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Aggregated-{getLessonName()}", 
-    "description": "Aggregated results for lesson",
-    "status": "{"passed" if TestResultsAggregator.passed else "failed"}",
-    "actPoints": "{TestResultsAggregator.score}", 
-    "maxPoints":   "{TestResultsAggregator.maxScore}",
-    "percentage": "{TestResultsAggregator.percentage}"
-  }}""")
+  daLogger.logAggregatedResults(getLessonName(), registration_id, TestResultsAggregator)
   
   suite.displayResults()

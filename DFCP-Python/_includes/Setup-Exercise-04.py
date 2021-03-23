@@ -87,15 +87,7 @@ def reality_check_04_a():
   suite.test(f"{suite_name}.current-db", f"The current database is {user_db}",  dependsOn=reg_id_id,
              testFunction = lambda: spark.catalog.currentDatabase() == user_db)
 
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
   check_a_passed = suite.passed
   suite.displayResults()
@@ -162,15 +154,7 @@ def reality_check_04_c():
   suite.test(f"{suite_name}.max-size_adj", f"Sample B of size_adj (valid values)", dependsOn=[suite.lastTestId()],
              testFunction = lambda: spark.read.table(products_table).select(FA.max(FA.col("size_adj"))).first()[0] == 1.0)
 
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
   check_c_passed = suite.passed
   suite.displayResults()
@@ -193,24 +177,8 @@ def reality_check_04_final():
 
   check_final_passed = suite.passed
 
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
-  daLogger.logEvent(f"Lesson.final", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Aggregated-{getLessonName()}", 
-    "description": "Aggregated results for lesson",
-    "status": "{"passed" if TestResultsAggregator.passed else "failed"}",
-    "actPoints": "{TestResultsAggregator.score}", 
-    "maxPoints":   "{TestResultsAggregator.maxScore}",
-    "percentage": "{TestResultsAggregator.percentage}"
-  }}""")
+  daLogger.logAggregatedResults(getLessonName(), registration_id, TestResultsAggregator)
   
   suite.displayResults()

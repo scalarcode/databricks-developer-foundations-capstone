@@ -177,16 +177,8 @@ def reality_check_02_a():
   suite.test(f"{suite_name}.ingest-date", "Ingest date is valid for 2017", testFunction=valid_ingest_date_2017, dependsOn=[suite.lastTestId()])
   suite.test(f"{suite_name}.values", "Key columns are the correct length (properly parsed)", testFunction=valid_values, dependsOn=[suite.lastTestId()])
   
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
-  
+  daLogger.logSuite(suite_name, registration_id, suite)
+
   check_a_passed = suite.passed
   suite.displayResults()
 
@@ -224,15 +216,7 @@ def reality_check_02_b():
   suite.test(f"{suite_name}.ingest-date", "Ingest date is valid for 2018", testFunction=valid_ingest_date_2018, dependsOn=[suite.lastTestId()])
   suite.test(f"{suite_name}.values", "Key columns are the correct length (properly parsed)", testFunction=valid_values, dependsOn=[suite.lastTestId()])
 
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
   check_b_passed = suite.passed
   suite.displayResults()
@@ -271,15 +255,7 @@ def reality_check_02_c():
   suite.test(f"{suite_name}.ingest-date", "Ingest date is valid for 2019", testFunction=valid_ingest_date_2019, dependsOn=[suite.lastTestId()])
   suite.test(f"{suite_name}.values", "Key columns are the correct length (properly parsed)", testFunction=valid_values, dependsOn=[suite.lastTestId()])
 
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
   check_c_passed = suite.passed
   suite.displayResults()
@@ -337,24 +313,8 @@ def reality_check_02_final():
     
   check_final_passed = suite.passed
     
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
-  daLogger.logEvent(f"Lesson.final", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Aggregated-{getLessonName()}", 
-    "description": "Aggregated results for lesson",
-    "status": "{"passed" if TestResultsAggregator.passed else "failed"}",
-    "actPoints": "{TestResultsAggregator.score}", 
-    "maxPoints":   "{TestResultsAggregator.maxScore}",
-    "percentage": "{TestResultsAggregator.percentage}"
-  }}""")
+  daLogger.logAggregatedResults(getLessonName(), registration_id, TestResultsAggregator)
  
   suite.displayResults()

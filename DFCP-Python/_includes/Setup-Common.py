@@ -117,7 +117,29 @@ None # Suppress output
 # COMMAND ----------
 
 class DatabricksAcademyLogger:
-  
+
+  def logSuite(self, suiteName, registrationId, suite):
+    self.logEvent(f"Test-{suiteName}.suite", f"""{{
+      "registrationId": "{registrationId}", 
+      "testId": "Suite-{suiteName}", 
+      "description": "Suite level results",
+      "status": "{"passed" if suite.passed else "failed"}",
+      "actPoints": "{suite.score}", 
+      "maxPoints": "{suite.maxScore}",
+      "percentage": "{suite.percentage}"
+    }}""")
+
+  def logAggregatedResults(self, lessonName, registrationId, aggregator):
+    self.logEvent(f"Lesson.final", f"""{{
+      "registrationId": "{registrationId}", 
+      "testId": "Aggregated-{lessonName}", 
+      "description": "Aggregated results for lesson",
+      "status": "{"passed" if aggregator.passed else "failed"}",
+      "actPoints": "{aggregator.score}", 
+      "maxPoints":   "{aggregator.maxScore}",
+      "percentage": "{aggregator.percentage}"
+    }}""")
+    
   def logEvent(self, eventId: str, message: str = None):
     import time
     import json

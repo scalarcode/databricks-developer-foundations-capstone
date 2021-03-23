@@ -109,15 +109,7 @@ def reality_check_03_a():
   suite.test(f"{suite_name}.current-db", f"The current database is {user_db}", dependsOn=reg_id_id,
              testFunction = lambda: spark.catalog.currentDatabase() == user_db)
 
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
   check_a_passed = suite.passed
   suite.displayResults()
@@ -145,15 +137,7 @@ def reality_check_03_b():
   suite.test(f"{suite_name}.count", f"Expected {meta_batch_count_2017+meta_batch_count_2018+meta_batch_count_2019:,d} records", dependsOn=[suite.lastTestId()],
              testFunction = lambda:  spark.read.table(batch_temp_view).count() == meta_batch_count_2017+meta_batch_count_2018+meta_batch_count_2019)
   
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
   check_b_passed = suite.passed
   suite.displayResults()
@@ -188,15 +172,7 @@ def reality_check_03_c():
   suite.test(f"{suite_name}.count-ssn-format", f"Expected _error_ssn_format record count to be {meta_ssn_format_count:,d}", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: spark.read.table(sales_reps_table).filter("_error_ssn_format == true").count() == meta_ssn_format_count)
 
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
   check_c_passed = suite.passed
   suite.displayResults()
@@ -248,15 +224,7 @@ def reality_check_03_d():
   suite.test(f"{suite_name}.partitions", f"Found 36 partitions", dependsOn=[suite.lastTestId()], 
              testFunction = lambda: __builtin__.len(list(filter(lambda p: p.endswith("_delta_log/") == False, map(lambda f: f.path, dbutils.fs.ls(hive_path))))) == 36)
   
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
   check_d_passed = suite.passed
   suite.displayResults()
@@ -288,15 +256,7 @@ def reality_check_03_e():
   suite.test(f"{suite_name}.count-total", f"Expected {meta_line_items_count:,d} records", dependsOn=[suite.lastTestId()],
              testFunction = lambda: spark.read.table(line_items_table).count() == meta_line_items_count)
 
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
   check_e_passed = suite.passed
   suite.displayResults()
@@ -319,24 +279,8 @@ def reality_check_03_final():
     
   check_final_passed = suite.passed
   
-  daLogger.logEvent(f"Test-{suite_name}.suite", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Suite-{suite_name}", 
-    "description": "Suite level results",
-    "status": "{"passed" if suite.passed else "failed"}",
-    "actPoints": "{suite.score}", 
-    "maxPoints": "{suite.maxScore}",
-    "percentage": "{suite.percentage}"
-  }}""")
+  daLogger.logSuite(suite_name, registration_id, suite)
   
-  daLogger.logEvent(f"Lesson.final", f"""{{
-    "registrationId": "{registration_id}", 
-    "testId": "Aggregated-{getLessonName()}", 
-    "description": "Aggregated results for lesson",
-    "status": "{"passed" if TestResultsAggregator.passed else "failed"}",
-    "actPoints": "{TestResultsAggregator.score}", 
-    "maxPoints":   "{TestResultsAggregator.maxScore}",
-    "percentage": "{TestResultsAggregator.percentage}"
-  }}""")
+  daLogger.logAggregatedResults(getLessonName(), registration_id, TestResultsAggregator)
   
   suite.displayResults()
