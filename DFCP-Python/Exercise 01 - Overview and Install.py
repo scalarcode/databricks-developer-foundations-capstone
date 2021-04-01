@@ -96,12 +96,17 @@
 # MAGIC 
 # MAGIC They need to be downloaded and installed into your Databricks workspace before proceeding with this project.
 # MAGIC 
+# MAGIC But before doing that, we need to configure a cluster appropriate for this project.
+# MAGIC 
 # MAGIC **In this step you will need to:**
-# MAGIC 1. Attach this notebook to a cluster
-# MAGIC 2. Specify your Registration ID
-# MAGIC 3. Run the setup notebook for this exercise
-# MAGIC 4. Install the datasets
-# MAGIC 5. Run the reality check to verify the datasets were correctly installed
+# MAGIC 1. Configure the appropriate cluster:
+# MAGIC   * Use DBR 7.3 LTS
+# MAGIC   * Configure the cluster with 8 cores
+# MAGIC 2. Attach this notebook to your cluster
+# MAGIC 3. Specify your Registration ID
+# MAGIC 4. Run the setup notebook for this exercise
+# MAGIC 5. Install the datasets
+# MAGIC 6. Run the reality check to verify the datasets were correctly installed
 # MAGIC 
 # MAGIC Note: These steps represent the basic pattern used by each exercise in this capstone project
 

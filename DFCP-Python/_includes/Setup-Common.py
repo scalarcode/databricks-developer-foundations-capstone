@@ -104,7 +104,7 @@ def validate_cluster():
   if not current_version:
     raise Exception("The current DBR is not yet available to this notebook. Give it a second and try again!")
   else:
-    return current_version == "7.3.x-scala2.12"
+    return current_version == "7.3.x-scala2.12" and sc.defaultParallelism == 8
     
 def validate_registration_id(registration_id):
   try: 
@@ -194,16 +194,18 @@ import uuid
 
 # Test case
 class TestCase(object):
-  __slots__=('description', 'testFunction', 'id', 'uniqueId', 'dependsOn', 'escapeHTML', 'points')
+  __slots__=('description', 'testFunction', 'id', 'uniqueId', 'dependsOn', 'escapeHTML', 'points', 'hint')
   def __init__(self,
                description:str,
                testFunction:Callable[[], Any],
                id:str=None,
                dependsOn:Iterable[str]=[],
                escapeHTML:bool=False,
-               points:int=1):
+               points:int=1,
+               hint=None):
     
     self.id=id
+    self.hint=hint
     self.points=points
     self.escapeHTML=escapeHTML
     self.description=description
@@ -228,12 +230,18 @@ class TestResult(object):
         self.points = self.test.points
       self.exception = None
       self.message = ""
+    except AssertionError as e:
+      self.status = "failed"
+      self.passed = False
+      self.points = 0
+      self.exception = e
+      self.message = ""
     except Exception as e:
       self.status = "failed"
       self.passed = False
       self.points = 0
       self.exception = e
-      self.message = repr(self.exception)
+      self.message = str(e)
 
 # Decorator to lazy evaluate - used by TestSuite
 def lazy_property(fn):
@@ -259,7 +267,8 @@ testResultsStyle = """
   .failed { background-color: #e2716c }
   .skipped { background-color: #f9d275 }
   .results .points { display: none }
-  .results .message { display: none }
+  .results .message { display: block; font-size:smaller; color:gray }
+  .results .note { display: block; font-size:smaller; font-decoration:italics }
   .results .passed::before  { content: "Passed" }
   .results .failed::before  { content: "Failed" }
   .results .skipped::before { content: "Skipped" }
@@ -320,10 +329,25 @@ class TestSuite(object):
     lines.append(testResultsStyle)
     lines.append("<table class='"+cssClass+"'>")
     lines.append("  <tr><th class='points'>Points</th><th class='test'>Test</th><th class='result'>Result</th></tr>")
+    
     for result in self.testResults:
-      resultHTML = "<td class='result "+result.status+"'><span class='message'>"+result.message+"</span></td>"
       descriptionHTML = escape(str(result.test.description)) if (result.test.escapeHTML) else str(result.test.description)
-      lines.append("  <tr><td class='points'>"+str(result.points)+"</td><td class='test'>"+descriptionHTML+"</td>"+resultHTML+"</tr>")
+      lines.append(f"<tr>")
+      lines.append(f"  <td class='points'>{str(result.points)}</td>")
+      lines.append(f"  <td class='test'>")
+      lines.append(f"    {descriptionHTML}")
+                   
+      if result.status == "failed" and result.test.hint:
+        lines.append(f"  <div class='note'>Hint: {escape(str(result.test.hint))}</div>")
+        
+      if result.message:
+        lines.append(f"    <hr/>")
+        lines.append(f"    <div class='message'>{escape(str(result.message))}</div>")
+
+      lines.append(f"  </td>")
+      lines.append(f"  <td class='result {result.status}'></td>")
+      lines.append(f"</tr>")
+      
     lines.append("  <caption class='points'>Score: "+str(self.score)+"</caption>")
     lines.append("</table>")
     html = "\n".join(lines)
@@ -362,13 +386,13 @@ class TestSuite(object):
     self.ids.add(testCase.id)
     return self
   
-  def test(self, id:str, description:str, testFunction:Callable[[], Any], points:int=1, dependsOn:Iterable[str]=[], escapeHTML:bool=False):
-    testCase = TestCase(id=id, description=description, testFunction=testFunction, dependsOn=dependsOn, escapeHTML=escapeHTML, points=points)
+  def test(self, id:str, description:str, testFunction:Callable[[], Any], points:int=1, dependsOn:Iterable[str]=[], escapeHTML:bool=False, hint=None):
+    testCase = TestCase(id=id, description=description, testFunction=testFunction, dependsOn=dependsOn, escapeHTML=escapeHTML, points=points, hint=hint)
     return self.addTest(testCase)
   
-  def testEquals(self, id:str, description:str, valueA, valueB, points:int=1, dependsOn:Iterable[str]=[], escapeHTML:bool=False):
+  def testEquals(self, id:str, description:str, valueA, valueB, points:int=1, dependsOn:Iterable[str]=[], escapeHTML:bool=False, hint=None):
     testFunction = lambda: valueA == valueB
-    testCase = TestCase(id=id, description=description, testFunction=testFunction, dependsOn=dependsOn, escapeHTML=escapeHTML, points=points)
+    testCase = TestCase(id=id, description=description, testFunction=testFunction, dependsOn=dependsOn, escapeHTML=escapeHTML, points=points, hint=hint)
     return self.addTest(testCase)
   
   def failPreReq(self, id:str, e:Exception, dependsOn:Iterable[str]=[]):
