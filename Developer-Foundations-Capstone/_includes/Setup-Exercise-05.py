@@ -125,7 +125,6 @@ def reality_check_05_a():
 def reality_check_05_b():
   # Restore candidate-shadowed builtins
   from builtins import len, list, map, filter
-  from pyspark.sql import functions as FA
 
   global check_b_passed
   
@@ -171,7 +170,8 @@ def reality_check_05_b():
 def reality_check_05_c():
   # Restore candidate-shadowed builtins
   from builtins import len, list, map, filter
-
+  from pyspark.sql import functions as FT
+  
   global check_c_passed
   
   suite_name = "ex.05.c"
@@ -195,7 +195,7 @@ def reality_check_05_c():
              testFunction = lambda: len(dbutils.fs.ls(f"{line_items_checkpoint_path}/metadata")) > 0)
 
     try:
-      new_count = spark.read.json(stream_path).select("orderId", FA.explode("products")).count()
+      new_count = spark.read.json(stream_path).select("orderId", FT.explode("products")).count()
       expected_li_count = meta_line_items_count + new_count
       suite.test(f"{suite_name}.li_total", f"Expected {expected_li_count:,d} records, ({new_count} new)", 
                  dependsOn=[suite.lastTestId()], 
@@ -221,7 +221,7 @@ def reality_check_05_c():
 def reality_check_05_final():
   # Restore candidate-shadowed builtins
   from builtins import len, list, map, filter
-  from pyspark.sql.functions import col
+  from pyspark.sql import functions as FT
   
   global check_final_passed
   
@@ -242,7 +242,7 @@ def reality_check_05_final():
              testFunction = lambda: spark.read.table(orders_table).count() == meta_orders_count + meta_stream_count)
 
   try:
-    new_count = spark.read.json(stream_path).select("orderId", FA.explode("products")).count()
+    new_count = spark.read.json(stream_path).select("orderId", FT.explode("products")).count()
     expected_li_count = meta_line_items_count + new_count
     suite.test(f"{suite_name}.li_total", f"Expected {expected_li_count:,d} records, ({new_count} new)",  
                      dependsOn = [suite.lastTestId()], 
@@ -255,7 +255,7 @@ def reality_check_05_final():
              testFunction = lambda: spark.read.table(products_table).count() == meta_products_count)
 
   suite.test(f"{suite_name}.non-null-submitted_at", f"Non-null (properly parsed) submitted_at", dependsOn=[suite.lastTestId()],
-             testFunction = lambda: spark.read.table(orders_table).filter(col("submitted_at").isNull()).count() == 0)
+             testFunction = lambda: spark.read.table(orders_table).filter(FT.col("submitted_at").isNull()).count() == 0)
   
   check_final_passed = suite.passed
 

@@ -119,7 +119,7 @@ def reality_check_04_b():
 def reality_check_04_c():
   # Restore candidate-shadowed builtins
   from builtins import len, list, map, filter
-  from pyspark.sql.functions import min, max
+  from pyspark.sql import functions as FT
 
   global check_c_passed
 
@@ -146,16 +146,16 @@ def reality_check_04_c():
             testFunction = lambda: spark.read.table(products_table).count() == meta_products_count)
 
   suite.test(f"{suite_name}.min-color_adj", f"Sample A of color_adj (valid values)", dependsOn=[suite.lastTestId()],
-             testFunction = lambda: spark.read.table(products_table).select(FA.min(FA.col("color_adj"))).first()[0] == 1.0)
+             testFunction = lambda: spark.read.table(products_table).select(FT.min(FT.col("color_adj"))).first()[0] == 1.0)
 
   suite.test(f"{suite_name}.max-color_adj", f"Sample B of color_adj (valid values)", dependsOn=[suite.lastTestId()],
-             testFunction = lambda: spark.read.table(products_table).select(FA.max(FA.col("color_adj"))).first()[0] == 1.1)
+             testFunction = lambda: spark.read.table(products_table).select(FT.max(FT.col("color_adj"))).first()[0] == 1.1)
 
   suite.test(f"{suite_name}.min-size_adj", f"Sample A of size_adj (valid values)", dependsOn=[suite.lastTestId()],
-             testFunction = lambda: spark.read.table(products_table).select(FA.min(FA.col("size_adj"))).first()[0] == 0.9)
+             testFunction = lambda: spark.read.table(products_table).select(FT.min(FT.col("size_adj"))).first()[0] == 0.9)
 
   suite.test(f"{suite_name}.max-size_adj", f"Sample B of size_adj (valid values)", dependsOn=[suite.lastTestId()],
-             testFunction = lambda: spark.read.table(products_table).select(FA.max(FA.col("size_adj"))).first()[0] == 1.0)
+             testFunction = lambda: spark.read.table(products_table).select(FT.max(FT.col("size_adj"))).first()[0] == 1.0)
 
   daLogger.logSuite(suite_name, registration_id, suite)
   

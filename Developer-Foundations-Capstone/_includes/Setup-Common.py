@@ -104,7 +104,7 @@ def validate_cluster():
   if not current_version:
     raise Exception("The current DBR is not yet available to this notebook. Give it a second and try again!")
   else:
-    return current_version == "7.3.x-scala2.12" and sc.defaultParallelism == 8
+    return current_version == "7.3.x-scala2.12" # and sc.defaultParallelism == 8
     
 def validate_registration_id(registration_id):
   try: 

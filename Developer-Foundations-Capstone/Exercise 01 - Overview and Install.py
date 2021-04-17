@@ -99,9 +99,9 @@
 # MAGIC But before doing that, we need to configure a cluster appropriate for this project.
 # MAGIC 
 # MAGIC **In this step you will need to:**
-# MAGIC 1. Configure the appropriate cluster:
+# MAGIC 1. Configure the cluster:
 # MAGIC   * Use DBR 7.3 LTS
-# MAGIC   * Configure the cluster with 8 cores
+# MAGIC   * Configure the cluster with 2-8 cores
 # MAGIC 2. Attach this notebook to your cluster
 # MAGIC 3. Specify your Registration ID
 # MAGIC 4. Run the setup notebook for this exercise
