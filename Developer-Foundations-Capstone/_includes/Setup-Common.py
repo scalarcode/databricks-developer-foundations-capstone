@@ -99,12 +99,25 @@ def checkSchema(schemaA, schemaB, keepOrder=True, keepNullable=False):
     else:
       return set(schA) == set(schB)
 
-def validate_cluster():
+def get_spark_version():
   current_version = getTag("sparkVersion")
-  if not current_version:
-    raise Exception("The current DBR is not yet available to this notebook. Give it a second and try again!")
-  else:
-    return current_version == "7.3.x-scala2.12" # and sc.defaultParallelism == 8
+  if not current_version: raise Exception("The current DBR is not yet available to this notebook. Give it a second and try again!")
+  return current_version
+
+def is_job():
+  job_id = getTag("jobId")
+  return True if job_id else False
+
+# The label, expected number of cores and the expected DBR to use in conjunction with the call to valdiate_cluster()
+expected_cores = 8
+expected_version = "7.3.x-scala2.12"
+validate_cluster_label = f"Test Run for {get_spark_version()}" if is_job() else "Using DBR 7.3 LTS"
+
+
+def validate_cluster():
+  current_version = get_spark_version()
+  return True if is_job() else (current_version == expected_version) # and sc.defaultParallelism == expected_cores)
+    
     
 def validate_registration_id(registration_id):
   try: 
@@ -468,10 +481,13 @@ import re
 # The user's name (email address) will be used to create a home directory into which all datasets will
 # be written into so as to further isolating changes from other students running the same material.
 username = getTag("user").lower()
+clean_username = re.sub("[^a-zA-Z0-9]", "_", username)
 
 # The course dataset_name is simply the
 # unique identifier for this project
+# TODO - rename this to course_name
 dataset_name = "developer-foundations-capstone"
+clean_course_name = re.sub("[^a-zA-Z0-9]", "_", dataset_name)
 
 # The path to our user's working directory. This combines both the
 # username and dataset_name to create a "globally unique" folder
@@ -492,7 +508,9 @@ products_xml_path = f"{working_dir}/raw/products/products.xml"
 
 batch_source_path = batch_target_path
 batch_temp_view = "batched_orders"
-user_db = "dbacademy_"+re.sub("[^a-zA-Z0-9]", "_", username) + "_db"
+
+user_db = f"""dbacademy_{clean_username}_{clean_course_name}"""
+
 orders_table = "orders"
 sales_reps_table = "sales_reps"
 products_table = "products"

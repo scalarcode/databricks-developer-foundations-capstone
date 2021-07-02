@@ -74,7 +74,7 @@
 
 # MAGIC %md ### The Exercises
 # MAGIC 
-# MAGIC * In **Exercise #1**, (this notebook) we will "install" a copy of the datasets into your Databricks workspace.
+# MAGIC * In **Exercise #1**, (this notebook) we introduce the registration procedure, the installation of our datasets and the reality-checks meant to aid you in your progress thought this capstone project.
 # MAGIC 
 # MAGIC * In **Exercise #2**, we will ingest the batch data for 2017-2019, combine them into a single dataset for future processing.
 # MAGIC 

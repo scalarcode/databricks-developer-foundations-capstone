@@ -16,7 +16,7 @@
 # MAGIC 
 # MAGIC You received a registration ID in an email when you enrolled into AWS Databricks  Core Technical Training Capstone.
 # MAGIC 
-# MAGIC The title of the email that contains your registration ID is **Databricks Training Registration Success - Apache Spark Programming Capstone Project**. 
+# MAGIC The title of the email that contains your registration ID is **Databricks Training Registration Success - Developer Foundations Capstone**. 
 # MAGIC 
 # MAGIC The email with the registration ID looks like this:
 # MAGIC 
@@ -42,7 +42,7 @@
 
 # COMMAND ----------
 
-# MAGIC %md Find the message titled **Databricks Training Registration Success - Apache Spark Programming Capstone Project**
+# MAGIC %md Find the message titled **Databricks Training Registration Success - Developer Foundations Capstone**
 # MAGIC 
 # MAGIC The registration ID is in the body of the message.
 # MAGIC 

@@ -97,7 +97,7 @@ def reality_check_05_a():
   suite_name = "ex.05.a"
   suite = TestSuite()
 
-  suite.test(f"{suite_name}.cluster", f"Using DBR 7.3 LTS, with 8 cores", testFunction = validate_cluster)
+  suite.test(f"{suite_name}.cluster", validate_cluster_label, testFunction = validate_cluster)
   cluster_id = suite.lastTestId()
   
   suite.test(f"{suite_name}.reg_id", f"Valid Registration ID", testFunction = lambda: validate_registration_id(registration_id), dependsOn=cluster_id)
